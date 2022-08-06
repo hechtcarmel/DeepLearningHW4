@@ -1,6 +1,6 @@
 import torch
 
-from attack import Attack
+from attacks.attack import Attack
 from Datasets.tartanTrajFlowDataset import extract_traj_data
 
 
