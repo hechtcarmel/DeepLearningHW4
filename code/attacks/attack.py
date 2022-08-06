@@ -396,6 +396,7 @@ class Attack:
         pert_expand = pert.expand(data_shape[0], -1, -1, -1).to(device)
         grad_tot = torch.zeros_like(pert, requires_grad=False)
 
+        # calculates total gradient
         for data_idx, data in enumerate(data_loader):
             dataset_idx, dataset_name, traj_name, traj_len, \
             img1_I0, img2_I0, intrinsic_I0, \
@@ -410,9 +411,11 @@ class Attack:
                                          mask1, mask2, device=device)
             grad = grad.sum(dim=0, keepdims=True).detach()
 
+            # accumulate gradient
             with torch.no_grad():
                 grad_tot += grad
 
+            # region delete params
             del grad
             del img1_I0
             del img2_I0
@@ -429,7 +432,9 @@ class Attack:
             del mask
             del perspective
             torch.cuda.empty_cache()
+            # endregion
 
+        # do gradient step
         with torch.no_grad():
             grad = self.normalize_grad(grad_tot)
             pert += multiplier * a_abs * grad
