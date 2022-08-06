@@ -1,4 +1,7 @@
+import torch
+
 from attack import Attack
+from Datasets.tartanTrajFlowDataset import extract_traj_data
 
 
 class AttackModified(Attack):
@@ -15,7 +18,6 @@ class AttackModified(Attack):
                          pert_padding=(0, 0))
         self.optimizer = optimizer
 
-    @override
     def gradient_ascent_step(self, pert, data_shape, data_loader, y_list, clean_flow_list,
                              multiplier, a_abs, eps, device=None):
         pert_expand = pert.expand(data_shape[0], -1, -1, -1).to(device)

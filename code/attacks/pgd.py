@@ -1,12 +1,13 @@
 import numpy as np
 import torch
 from attacks.attack import Attack
+from attacks.attack_modified import AttackModified
 import time
 from tqdm import tqdm
 import cv2
 
 
-class PGD(Attack):
+class PGD(AttackModified):
     def __init__(
             self,
             model,
