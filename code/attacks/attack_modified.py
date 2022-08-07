@@ -69,6 +69,13 @@ class AttackModified(Attack):
 
         return pert
 
-    def optimization_update(self, a_abs, grad, multiplier, pert):
-        pert += multiplier * a_abs * grad
+    def optimization_update(self, pert, grad, params):
+        if self.optimizer:
+            pert += self.optimizer(grad, params)
+        else:
+            pert += self.default_optimizer(grad, params)
         return pert
+
+    def default_optimizer(self, grad, params):
+        return params['multiplier'] * params['a_abs'] * grad
+

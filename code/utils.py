@@ -1,7 +1,9 @@
 import argparse
 import torch
+from collections import namedtuple
 
 from attacks import PGD, Const
+from attacks.optimizers import Adam, SGD
 import torch.backends.cudnn as cudnn
 import random
 from TartanVO import TartanVO
@@ -88,6 +90,16 @@ def parse_args():
     parser.add_argument('--window_stride', type=int, default=None, metavar='WST',
                         help='Trajectory window stride for optimizing attacks (default: whole window)')
     parser.add_argument('--load_attack', default=None, help='path to load previously computed perturbation (default: "")')
+
+
+    #region optimizer params
+    parser.add_argument('--optimizer', default='SGD', help='optimizer model')
+    parser.add_argument('--opt-beta1', default=0.9, help='param beta1 for optimizer model \'Adam\'')
+    parser.add_argument('--opt-beta2', default=0.999, help='param beta2 for optimizer model \'Adam\'')
+    parser.add_argument('--opt-eps', default=1e-8, help='param epsilon for optimizers')
+    parser.add_argument('--opt-eta', default=0.01, help='param eta for optimizers')
+
+    #endregion
 
     args = parser.parse_args()
     # print("args")
@@ -330,6 +342,12 @@ def compute_output_dir(args):
     print('==> Will write outputs to {}'.format(args.output_dir))
     return args
 
+# def optimizer_args(args):
+#     optimizers_dict = {'Adam': ,
+#     Adam = namedtuple('Adam', ['beta1', 'beta2', 'eta', 'epsilon'])
+#     # Optimizers = namedtuple('Optimizers', ['Adam', 'SGD'])
+#     optimizer = args.optimizer
+#     if optimizer not in
 
 def get_args():
 
@@ -339,7 +357,7 @@ def get_args():
     args = compute_VO_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
-
+    # args = optimizer_args(args)
     print("arguments parsing finished")
     return args
 

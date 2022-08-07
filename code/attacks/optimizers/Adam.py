@@ -1,7 +1,8 @@
 import torch
+from attacks.optimizers.Optimizer import Optimizer
 
 
-class AdamOptim:
+class AdamOptim(Optimizer):
     def __init__(self, eta=0.01, beta1=0.9, beta2=0.999, epsilon=1e-8):
         self.m_dw, self.v_dw = (0, 0)
         self.beta1 = beta1
@@ -10,25 +11,20 @@ class AdamOptim:
         self.eta = eta
         self.t = 0
 
-    def get_step(self, w, dw=None):
-        ## dw, db are from current minibatch
-        ## momentum beta 1
+    def calc_step(self, w, dw=None):
+        # dw, db are from current minibatch
+        # momentum beta 1
         with torch.no_grad():
             self.t += 1
             dw = w.grad if dw is None else dw
             # * weights * #
             self.m_dw = self.beta1 * self.m_dw + (1 - self.beta1) * dw
 
-            ## rms beta 2
+            # rms beta 2
             # * weights * #
             self.v_dw = self.beta2 * self.v_dw + (1 - self.beta2) * (dw * 2)
-            ## bias correction
+            # bias correction
             m_dw_corr = self.m_dw / (1 - self.beta1 ** self.t)
             v_dw_corr = self.v_dw / (1 - self.beta2 ** self.t)
-
-        ## update weights and biases
-        # w = w - self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
-        return self.eta * (m_dw_corr / (torch.sqrt(v_dw_corr) + self.epsilon))
-
-    # def update(self, w):
-    #     return w + self.get_step(w)
+            step = self.eta * (m_dw_corr / (torch.sqrt(v_dw_corr) + self.epsilon))
+        return step
