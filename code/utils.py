@@ -17,6 +17,32 @@ from loss import VOCriterion
 import numpy as np
 
 
+optimizers_dict = {
+    'default': SGD,
+    'Adam': Adam,
+    # 'RMSprop': RMSprop,
+    'SGD': SGD}
+
+class PositiveFloat:
+    def __init__(self, num: float):
+        if num < 0:
+            raise argparse.ArgumentTypeError("%r is not a positive number" % num)
+        if not isinstance(num, (int, float)):
+            raise argparse.ArgumentTypeError("%r is not a number" % num)
+        self.value = float(num)
+
+    def __call__(self):
+        return self.value
+
+    @property
+    def value(self):
+        return self.value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     # parser = argparse.ArgumentParser(description='HRL')
@@ -237,7 +263,8 @@ def compute_attack_args(args):
                                           norm=args.attack_norm,
                                           data_shape=(args.traj_len - 1, args.image_height, args.image_width),
                                           pert_path=args.load_attack,
-                                          pert_transform=const_pert_transform)
+                                          pert_transform=const_pert_transform,
+                                          optimizer=args.optimizer)
         else:
             args.attack_obj = args.attack(args.model, args.att_criterion, args.att_eval_criterion,
                                           norm=args.attack_norm,
@@ -246,7 +273,8 @@ def compute_attack_args(args):
                                           sample_window_size=args.window_size,
                                           sample_window_stride=args.window_stride,
                                           init_pert_path=args.load_attack,
-                                          init_pert_transform=load_pert_transform)
+                                          init_pert_transform=load_pert_transform,
+                                          optimizer=args.optimizer)
 
     return args
 
@@ -342,12 +370,34 @@ def compute_output_dir(args):
     print('==> Will write outputs to {}'.format(args.output_dir))
     return args
 
-# def optimizer_args(args):
-#     optimizers_dict = {'Adam': ,
-#     Adam = namedtuple('Adam', ['beta1', 'beta2', 'eta', 'epsilon'])
-#     # Optimizers = namedtuple('Optimizers', ['Adam', 'SGD'])
-#     optimizer = args.optimizer
-#     if optimizer not in
+def createOptimizer(args):
+    optimizer_class = optimizers_dict[args.name]
+    needed_params = optimizer_class.get_params()
+    optimizer_params = {k:v for k,v in args.__dict__.items() if k in needed_params}
+    optimizer = optimizer_class(**optimizer_params)
+    return optimizer
+
+def createDefaultOptimizer(args):
+    if not args.optimizer:
+        default_optimizer = optimizers_dict['default']
+        args.__setattr__('optimizer', default_optimizer)
+        args.__setattr__('name', default_optimizer.name)
+        for k,v in default_optimizer.get_params().items():
+            args.__setattr__(k, v)
+    else:
+        args.name = optimizers_dict['default']
+    optimizer = createOptimizer(args)
+    return optimizer
+
+
+def optimizer_args(args):
+
+    if args.optimizer and args.name:
+        optimizer = createOptimizer(args)
+    else:
+        optimizer = createDefaultOptimizer(args)
+    args.optimizer = optimizer
+    return args
 
 def get_args():
 
@@ -355,10 +405,11 @@ def get_args():
     args = compute_run_args(args)
     args = compute_data_args(args)
     args = compute_VO_args(args)
+    args = optimizer_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
-    # args = optimizer_args(args)
     print("arguments parsing finished")
+    print(args)
     return args
 
 

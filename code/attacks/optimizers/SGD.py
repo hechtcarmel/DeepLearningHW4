@@ -4,9 +4,10 @@ from attacks.optimizers.Optimizer import Optimizer
 
 
 class SGD(Optimizer):
-    def __init__(self, a_abs, multiplier):
+    def __init__(self, a_abs=1, multiplier=1):
         self.a_abs = a_abs
         self.multiplier = multiplier
+        super().__init__()
 
     def calc_step(self, w, dw=None):
         with torch.no_grad():
