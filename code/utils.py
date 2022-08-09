@@ -119,11 +119,17 @@ def parse_args():
 
 
     #region optimizer params
-    parser.add_argument('--optimizer', default='SGD', help='optimizer model')
-    parser.add_argument('--opt-beta1', default=0.9, help='param beta1 for optimizer model \'Adam\'')
-    parser.add_argument('--opt-beta2', default=0.999, help='param beta2 for optimizer model \'Adam\'')
-    parser.add_argument('--opt-eps', default=1e-8, help='param epsilon for optimizers')
-    parser.add_argument('--opt-eta', default=0.01, help='param eta for optimizers')
+    subparsers = parser.add_subparsers(help="sub-command help", dest='optimizer')
+    optimizer = subparsers.add_parser("optimizer", help="provide an optimizer")
+    optimizer.add_argument("-n", "--name", help="the name of the optimizer", type=str, default="SGD")
+    optimizer.add_argument("-a", "--alpha", help="the alpha of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-b", "--beta", help="the beta of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-b1", "--beta1", help="the beta1 of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-b2", "--beta2", help="the beta2 of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-e", "--epsilon", help="the epsilon of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-m", "--momentum", help="the momentum of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-v", "--velocity", help="the velocity of the optimizer", nargs='?', type=PositiveFloat, )
+    optimizer.add_argument("-l", "--lr", help="the learning rate of the optimizer", nargs='?', type=PositiveFloat, )
 
     #endregion
 
