@@ -3,7 +3,7 @@ from optimizers.Optimizer import Optimizer
 
 
 class Adam(Optimizer):
-    def __init__(self, eta=0.01, beta1=0.9, beta2=0.999, epsilon=1e-8):
+    def __init__(self, eta=0.01, beta1=0.9, beta2=0.999, epsilon=1e-8, **kwargs):
         self.m_dw, self.v_dw = (0, 0)
         self.beta1 = beta1
         self.beta2 = beta2
