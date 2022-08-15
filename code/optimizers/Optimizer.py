@@ -9,8 +9,8 @@ class Optimizer(ABC):
     def calc_step(self):
         raise NotImplementedError
 
-    def get_params(self, **kwargs):
-        breakpoint()
+    @staticmethod
+    def get_params(self):
         return self.__init__.__code__.co_varnames[1:self.__init__.__code__.co_argcount]
 
     @property

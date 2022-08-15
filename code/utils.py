@@ -375,7 +375,7 @@ def compute_output_dir(args):
     return args
 
 def createOptimizer(args):
-    optimizer_class = optimizers_dict[args.name]
+    optimizer_class = optimizers_dict[args.name]()
     needed_params = optimizer_class.get_params()
     optimizer_params = {k:v for k,v in args.__dict__.items() if k in needed_params}
     optimizer = optimizer_class(**optimizer_params)
@@ -383,7 +383,7 @@ def createOptimizer(args):
 
 def createDefaultOptimizer(args):
     if not args.optimizer:
-        default_optimizer = optimizers_dict['default']
+        default_optimizer = optimizers_dict['default']()
         args.__setattr__('optimizer', default_optimizer)
         args.__setattr__('name', default_optimizer.name)
         for k,v in default_optimizer.get_params().items():
