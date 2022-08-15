@@ -1,6 +1,6 @@
 import torch
 
-from attacks.optimizers.Optimizer import Optimizer
+from optimizers.Optimizer import Optimizer
 
 
 class SGD(Optimizer):

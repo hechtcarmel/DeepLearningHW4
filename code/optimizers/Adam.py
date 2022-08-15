@@ -1,8 +1,8 @@
 import torch
-from attacks.optimizers.Optimizer import Optimizer
+from optimizers.Optimizer import Optimizer
 
 
-class AdamOptim(Optimizer):
+class Adam(Optimizer):
     def __init__(self, eta=0.01, beta1=0.9, beta2=0.999, epsilon=1e-8):
         self.m_dw, self.v_dw = (0, 0)
         self.beta1 = beta1

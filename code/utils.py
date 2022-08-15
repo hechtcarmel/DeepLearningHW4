@@ -1,15 +1,13 @@
 import argparse
 import torch
-from collections import namedtuple
 
 from attacks import PGD, Const
-from attacks.optimizers import Adam, SGD
+from optimizers import Adam, SGD
 import torch.backends.cudnn as cudnn
 import random
 from TartanVO import TartanVO
 from Datasets.utils import ToTensor, Compose, CropCenter, dataset_intrinsics, DownscaleFlow
-from Datasets.tartanTrajFlowDataset import TrajFolderDataset, \
-    MultiTrajFolderDatasetCustom, MultiTrajFolderDatasetRealData
+from Datasets.tartanTrajFlowDataset import MultiTrajFolderDatasetCustom
 from torch.utils.data import DataLoader
 from os import mkdir, makedirs
 from os.path import isdir

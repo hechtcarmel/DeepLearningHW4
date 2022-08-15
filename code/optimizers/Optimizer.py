@@ -10,8 +10,9 @@ class Optimizer(ABC):
         raise NotImplementedError
 
     def get_params(self, **kwargs):
-        return self.__init__.__code__.co_varnames[1:self.__init__.__code__.co_argcount].copy()
+        breakpoint()
+        return self.__init__.__code__.co_varnames[1:self.__init__.__code__.co_argcount]
 
     @property
     def name(self):
-        return self.__name__.copy()
+        return self.__name__
