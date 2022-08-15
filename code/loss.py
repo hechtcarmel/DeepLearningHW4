@@ -165,7 +165,8 @@ class VOCriterion:
         else:
             self.calc_t_crit = self.calc_cumul_poses_t
 
-        self.calc_rot_crit = self.calc_none
+        self.calc_rot_crit = self.calc_rot_quat_product
+
 
         self.calc_flow_crit = self.calc_none
 
