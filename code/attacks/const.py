@@ -1,12 +1,14 @@
 import numpy as np
 import torch
+
+from attacks import AttackModified
 from attacks.attack import Attack
 import time
 import cv2
 from Datasets.tartanTrajFlowDataset import extract_traj_data
 
 
-class Const(Attack):
+class Const(AttackModified):
     def __init__(
             self,
             model,
@@ -16,11 +18,12 @@ class Const(Attack):
             pert_padding=(0, 0),
             pert_path=None,
             pert_transform=None,
-            default_pert_I1=False):
+            default_pert_I1=False,
+            **kwargs):
         super(Const, self).__init__(model, criterion=None, test_criterion=test_criterion,
                                     norm=norm, data_shape=data_shape,
                                     sample_window_size=None, sample_window_stride=None,
-                                    pert_padding=pert_padding)
+                                    pert_padding=pert_padding, **kwargs)
         self.set_pertubation(pert_path, pert_transform, default_pert_I1)
 
     def set_pertubation(self, pert_path=None, pert_transform=None, default_pert_I1=False):

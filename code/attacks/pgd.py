@@ -23,10 +23,11 @@ class PGD(AttackModified):
             sample_window_stride=None,
             pert_padding=(0, 0),
             init_pert_path=None,
-            init_pert_transform=None):
+            init_pert_transform=None,
+            **kwargs):
         super(PGD, self).__init__(model, criterion, test_criterion, norm, data_shape,
                                   sample_window_size, sample_window_stride,
-                                  pert_padding)
+                                  pert_padding, **kwargs)
 
         self.alpha = alpha
 
