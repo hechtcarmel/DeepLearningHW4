@@ -6,7 +6,7 @@ class Optimizer(ABC):
         pass
 
     @abstractmethod
-    def calc_step(self):
+    def calc_step(self, w, dw=None):
         raise NotImplementedError
 
     @staticmethod

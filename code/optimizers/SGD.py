@@ -4,7 +4,7 @@ from optimizers.Optimizer import Optimizer
 
 
 class SGD(Optimizer):
-    def __init__(self, a_abs=1, multiplier=1, **kwags):
+    def __init__(self, a_abs=1, multiplier=1, **kwargs):
         self.a_abs = a_abs
         self.multiplier = multiplier
         super().__init__()

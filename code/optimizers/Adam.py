@@ -10,6 +10,7 @@ class Adam(Optimizer):
         self.epsilon = epsilon
         self.eta = eta
         self.t = 0
+        super().__init__()
 
     def calc_step(self, w, dw=None):
         # dw, db are from current minibatch

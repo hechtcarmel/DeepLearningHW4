@@ -375,9 +375,7 @@ def compute_output_dir(args):
     return args
 
 def createOptimizer(args):
-    optimizer_class = optimizers_dict[args.name]
-    # needed_params = optimizer_class.get_params()
-    # optimizer_params = {k:v for k,v in args.__dict__.items() if k in needed_params}
+    optimizer_class = optimizers_dict.get(args.name)
     optimizer = optimizer_class(**args)
     return optimizer
 
@@ -386,15 +384,13 @@ def createDefaultOptimizer(args):
         default_optimizer = optimizers_dict['default']()
         args.__setattr__('optimizer', default_optimizer)
         args.__setattr__('name', default_optimizer.name)
-        # for k,v in default_optimizer.get_params().items():
-        #     args.__setattr__(k, v)
     else:
         args.name = optimizers_dict['default'].name
     optimizer = createOptimizer(args)
     return optimizer
 
 
-def optimizer_args(args):
+def compute_optimizer_args(args):
 
     if args.optimizer and args.name:
         optimizer = createOptimizer(args)
@@ -409,7 +405,7 @@ def get_args():
     args = compute_run_args(args)
     args = compute_data_args(args)
     args = compute_VO_args(args)
-    args = optimizer_args(args)
+    args = compute_optimizer_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
     print("arguments parsing finished")
