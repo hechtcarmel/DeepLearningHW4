@@ -3,12 +3,12 @@ from optimizers.Optimizer import Optimizer
 
 
 class Adam(Optimizer):
-    def __init__(self, eta=0.01, beta1=0.9, beta2=0.999, epsilon=1e-8, **kwargs):
+    def __init__(self, args):
         self.m_dw, self.v_dw = (0, 0)
-        self.beta1 = beta1
-        self.beta2 = beta2
-        self.epsilon = epsilon
-        self.eta = eta
+        self.beta1 = getattr(args, 'beta1', 0.9)
+        self.beta2 = getattr(args, 'beta2', 0.999)
+        self.epsilon = getattr(args, 'epsilon', 1e-8)
+        self.eta = getattr(args, 'eta', 0.01)
         self.t = 0
         super().__init__()
 
