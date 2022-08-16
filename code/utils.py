@@ -376,7 +376,7 @@ def compute_output_dir(args):
 
 def createOptimizer(args):
     optimizer_class = optimizers_dict.get(args.name)
-    optimizer = optimizer_class(**args)
+    optimizer = optimizer_class(args)
     return optimizer
 
 def createDefaultOptimizer(args):
