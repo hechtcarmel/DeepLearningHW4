@@ -268,7 +268,7 @@ def compute_attack_args(args):
                                           data_shape=(args.traj_len - 1, args.image_height, args.image_width),
                                           pert_path=args.load_attack,
                                           pert_transform=const_pert_transform,
-                                          optimizer=args.optimizer)
+                                          optimizer=getattr(args, 'optimizer', None))
         else:
             args.attack_obj = args.attack(args.model, args.att_criterion, args.att_eval_criterion,
                                           norm=args.attack_norm,
@@ -278,7 +278,7 @@ def compute_attack_args(args):
                                           sample_window_stride=args.window_stride,
                                           init_pert_path=args.load_attack,
                                           init_pert_transform=load_pert_transform,
-                                          optimizer=args.optimizer)
+                                          optimizer=getattr(args, 'optimizer', None))
 
     return args
 
