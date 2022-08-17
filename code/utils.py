@@ -16,13 +16,13 @@ import numpy as np
 
 from optimizers.Optimizer import Optimizer
 
-# optimizers_dict = {
-#     'default': SGD,
-#     'Adam': Adam,
-#     # 'RMSprop': RMSprop,
-#     'SGD': SGD}
+optimizers_dict = {
+    'default': SGD,
+    'Adam': Adam,
+    # 'RMSprop': RMSprop,
+    'SGD': SGD}
 
-optimizers_dict = {opt.__name__: opt for opt in Optimizer.__subclasses__()}
+# optimizers_dict = {opt.__name__: opt for opt in Optimizer.__subclasses__()}
 
 
 class PositiveFloat:
