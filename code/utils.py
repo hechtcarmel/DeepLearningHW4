@@ -382,7 +382,7 @@ def compute_output_dir(args):
 def create_optimizer(args):
     optimizer_class = optimizers_dict.get(args.name)
     optimizer_params = dict()
-    for key, value in optimizer_class.get_params():
+    for key, value in optimizer_class.get_params().items():
         if key in args:
             optimizer_params[key] = getattr(args, key, optimizer_params[key])
     optimizer = optimizer_class(optimizer_params)
