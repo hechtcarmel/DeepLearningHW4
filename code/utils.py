@@ -14,12 +14,16 @@ from os.path import isdir
 from loss import VOCriterion
 import numpy as np
 
+from optimizers.Optimizer import Optimizer
 
-optimizers_dict = {
-    'default': SGD,
-    'Adam': Adam,
-    # 'RMSprop': RMSprop,
-    'SGD': SGD}
+# optimizers_dict = {
+#     'default': SGD,
+#     'Adam': Adam,
+#     # 'RMSprop': RMSprop,
+#     'SGD': SGD}
+
+optimizers_dict = {opt.__name__: opt for opt in Optimizer.__subclasses__()}
+
 
 class PositiveFloat:
     def __init__(self, num: float):
@@ -374,28 +378,34 @@ def compute_output_dir(args):
     print('==> Will write outputs to {}'.format(args.output_dir))
     return args
 
-def createOptimizer(args):
+
+def create_optimizer(args):
     optimizer_class = optimizers_dict.get(args.name)
-    optimizer = optimizer_class(args)
+    optimizer_params = dict()
+    for key, value in optimizer_class.get_params():
+        if key in args:
+            optimizer_params[key] = getattr(args, key, optimizer_params[key])
+    optimizer = optimizer_class(optimizer_params)
     return optimizer
 
-def createDefaultOptimizer(args):
+
+def create_default_optimizer(args):
     if not args.optimizer:
         default_optimizer = optimizers_dict['default']()
         args.__setattr__('optimizer', default_optimizer)
         args.__setattr__('name', default_optimizer.name)
     else:
         args.name = optimizers_dict['default'].name
-    optimizer = createOptimizer(args)
+    optimizer = create_optimizer(args)
     return optimizer
 
 
 def compute_optimizer_args(args):
 
     if args.optimizer and args.name:
-        optimizer = createOptimizer(args)
+        optimizer = create_optimizer(args)
     else:
-        optimizer = createDefaultOptimizer(args)
+        optimizer = create_default_optimizer(args)
     args.optimizer = optimizer
     return args
 

@@ -64,7 +64,8 @@ class AttackModified(Attack):
         # do gradient step
         with torch.no_grad():
             grad = self.normalize_grad(grad_tot)
-            pert = self.optimization_update(a_abs, grad, multiplier, pert)
+            # add params to optimizer step
+            pert = self.optimization_update(pert, grad, )
             pert = self.project(pert, eps)
 
         return pert
