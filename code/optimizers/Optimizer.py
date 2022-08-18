@@ -5,9 +5,9 @@ class Optimizer(ABC):
     def __init__(self):
         pass
 
-    @abstractmethod
-    def __call__(self, w, dw=None):
-        self.calc_step(w, dw)
+    # @abstractmethod
+    # def __call__(self, w, dw=None):
+    #     self.calc_step(w, dw)
 
     @abstractmethod
     def calc_step(self, w, dw=None):
