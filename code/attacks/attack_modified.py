@@ -65,18 +65,11 @@ class AttackModified(Attack):
         with torch.no_grad():
             grad = self.normalize_grad(grad_tot)
             # add params to optimizer step
-            pert = self.optimization_update(pert, grad, )
+            pert = self.optimization_update(pert, grad)
             pert = self.project(pert, eps)
 
         return pert
 
-    def optimization_update(self, pert, grad, params):
-        if self.optimizer:
-            pert += self.optimizer(grad, params)
-        else:
-            pert += self.default_optimizer(grad, params)
+    def optimization_update(self, pert, grad):
+        pert += self.optimizer(grad)
         return pert
-
-    def default_optimizer(self, grad, params):
-        return params['multiplier'] * params['a_abs'] * grad
-
