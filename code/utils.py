@@ -385,7 +385,7 @@ def create_optimizer(args):
     for key, value in optimizer_class.get_params().items():
         if key in args:
             optimizer_params[key] = getattr(args, key, optimizer_params[key])
-    optimizer = optimizer_class(optimizer_params)
+    optimizer = optimizer_class(**optimizer_params)
     return optimizer
 
 
