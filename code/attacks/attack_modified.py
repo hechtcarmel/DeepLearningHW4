@@ -71,5 +71,5 @@ class AttackModified(Attack):
         return pert
 
     def optimization_update(self, pert, grad):
-        pert += self.optimizer(grad)
+        pert += self.optimizer.calc_step(grad)
         return pert
