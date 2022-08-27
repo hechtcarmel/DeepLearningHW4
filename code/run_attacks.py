@@ -1091,328 +1091,12 @@ def run_attacks_train(args):
     )
 
 
-####################################################################
-def make_output_folders(output_dir, save_flow, save_pose, save_imgs):
-    flowdir = None
-    pose_dir = None
-    img_dir = None
-    adv_img_dir = None
-    adv_pert_dir = None
-
-    if save_flow:
-        flowdir = output_dir + "/flow"
-        if not isdir(flowdir):
-            mkdir(flowdir)
-    if save_pose:
-        pose_dir = output_dir + "/pose"
-        if not isdir(pose_dir):
-            mkdir(pose_dir)
-    if save_imgs:
-        img_dir = output_dir + "/clean_images"
-        if not isdir(img_dir):
-            mkdir(img_dir)
-        adv_img_dir = output_dir + "/adv_images"
-        if not isdir(adv_img_dir):
-            mkdir(adv_img_dir)
-        adv_pert_dir = output_dir + "/adv_pert"
-        if not isdir(adv_pert_dir):
-            mkdir(adv_pert_dir)
-
-    return flowdir, pose_dir, img_dir, adv_img_dir, adv_pert_dir
-
-
-def carmel_get_list_subset(list, indices):
-    return [list[idx] for idx in indices]
-
-
-def carmel_make_train_valid_folders(
-    output_dir,
-    test_fold_idx,
-    save_results,
-    save_best_pert,
-    save_flow,
-    save_pose,
-    save_imgs,
-    fold_idx_str="out_of_sample_test_fold_idx",
-    make_test_folder=True,
-):
-
-    adv_best_pert_dir = None
-    train_output_dir = None
-    train_flowdir = None
-    train_pose_dir = None
-    train_img_dir = None
-    train_adv_img_dir = None
-    train_adv_pert_dir = None
-    eval_output_dir = None
-    eval_flowdir = None
-    eval_pose_dir = None
-    eval_img_dir = None
-    eval_adv_img_dir = None
-    eval_adv_pert_dir = None
-    test_output_dir = None
-    test_flowdir = None
-    test_pose_dir = None
-    test_img_dir = None
-    test_adv_img_dir = None
-    test_adv_pert_dir = None
-
-    print("save_results")
-    print(save_results)
-    if save_results:
-        output_dir = output_dir + "/" + fold_idx_str + "_" + str(test_fold_idx)
-        if not isdir(output_dir):
-            mkdir(output_dir)
-        print("save_best_pert")
-        print(save_best_pert)
-        if save_best_pert:
-            adv_best_pert_dir = output_dir + "/adv_best_pert"
-            if not isdir(adv_best_pert_dir):
-                mkdir(adv_best_pert_dir)
-            print("adv_best_pert_dir")
-            print(adv_best_pert_dir)
-
-        train_output_dir = output_dir + "/train"
-        if not isdir(train_output_dir):
-            mkdir(train_output_dir)
-        (
-            train_flowdir,
-            train_pose_dir,
-            train_img_dir,
-            train_adv_img_dir,
-            train_adv_pert_dir,
-        ) = make_output_folders(train_output_dir, save_flow, save_pose, save_imgs)
-        eval_output_dir = output_dir + "/eval"
-        if not isdir(eval_output_dir):
-            mkdir(eval_output_dir)
-        (
-            eval_flowdir,
-            eval_pose_dir,
-            eval_img_dir,
-            eval_adv_img_dir,
-            eval_adv_pert_dir,
-        ) = make_output_folders(eval_output_dir, save_flow, save_pose, save_imgs)
-        if make_test_folder:
-            test_output_dir = output_dir + "/test"
-            if not isdir(test_output_dir):
-                mkdir(test_output_dir)
-            (
-                test_flowdir,
-                test_pose_dir,
-                test_img_dir,
-                test_adv_img_dir,
-                test_adv_pert_dir,
-            ) = make_output_folders(test_output_dir, save_flow, save_pose, save_imgs)
-
-    print("adv_best_pert_dir")
-    print(adv_best_pert_dir)
-
-    return (
-        output_dir,
-        adv_best_pert_dir,
-        train_output_dir,
-        train_flowdir,
-        train_pose_dir,
-        train_img_dir,
-        train_adv_img_dir,
-        train_adv_pert_dir,
-        eval_output_dir,
-        eval_flowdir,
-        eval_pose_dir,
-        eval_img_dir,
-        eval_adv_img_dir,
-        eval_adv_pert_dir,
-        test_output_dir,
-        test_flowdir,
-        test_pose_dir,
-        test_img_dir,
-        test_adv_img_dir,
-        test_adv_pert_dir,
-    )
+#!START############################################
 
 
 def collect_columns(src_list, target_list):
     for idx, val in enumerate(src_list):
         target_list[idx].append(val)
-
-
-def test_perturb_trajectories(
-    args,
-    train_traj_names,
-    eval_traj_names,
-    test_traj_names,
-    attack,
-    train_dataloader,
-    motions_target_train_list,
-    eval_dataloader,
-    motions_target_eval_list,
-    test_dataloader,
-    motions_target_test_list,
-    adv_best_pert_dir,
-    train_adv_img_dir,
-    train_adv_pert_dir,
-    train_flowdir,
-    train_pose_dir,
-    eval_adv_img_dir,
-    eval_adv_pert_dir,
-    eval_flowdir,
-    eval_pose_dir,
-    test_adv_img_dir,
-    test_adv_pert_dir,
-    test_flowdir,
-    test_pose_dir,
-):
-    print("optimizing attacks on trajectories:")
-    print(train_traj_names)
-    print("evaluate attacks on trajectories:")
-    print(eval_traj_names)
-    print("testing attacks on trajectories:")
-    print(test_traj_names)
-
-    (
-        best_pert,
-        eval_clean_loss_list,
-        eval_all_loss_list,
-        eval_all_best_loss_list,
-    ) = attack.perturb(
-        train_dataloader,
-        motions_target_train_list,
-        eps=args.eps,
-        device=args.device,
-        eval_data_loader=eval_dataloader,
-        eval_y_list=motions_target_eval_list,
-    )
-
-    adv_eval_loss_list = attack.test_pert(
-        best_pert, eval_dataloader, motions_target_eval_list, device=args.device
-    )
-
-    adv_test_loss_list = attack.test_pert(
-        best_pert, test_dataloader, motions_target_test_list, device=args.device
-    )
-
-    print("eval_clean_loss_list")
-    print(eval_clean_loss_list)
-    print("eval_all_loss_list")
-    print(eval_all_loss_list)
-    print("eval_all_best_loss_list")
-    print(eval_all_best_loss_list)
-    eval_best_loss_list = eval_all_best_loss_list[-1]
-    print("eval_best_loss_list")
-    print(eval_best_loss_list)
-    print("adv_eval_loss_list")
-    print(adv_eval_loss_list)
-    print("adv_test_loss_list")
-    print(adv_test_loss_list)
-
-    if args.save_best_pert:
-        save_image(best_pert[0], adv_best_pert_dir + "/" + "adv_best_pert.png")
-
-    traj_adv_train_criterions_list = test_adv_trajectories(
-        train_dataloader,
-        args.model,
-        motions_target_train_list,
-        attack,
-        best_pert,
-        args.criterions,
-        args.window_size,
-        args.save_imgs,
-        args.save_flow,
-        args.save_pose,
-        train_adv_img_dir,
-        train_adv_pert_dir,
-        train_flowdir,
-        train_pose_dir,
-        device=args.device,
-    )
-
-    traj_adv_eval_criterions_list = test_adv_trajectories(
-        eval_dataloader,
-        args.model,
-        motions_target_eval_list,
-        attack,
-        best_pert,
-        args.criterions,
-        args.window_size,
-        args.save_imgs,
-        args.save_flow,
-        args.save_pose,
-        eval_adv_img_dir,
-        eval_adv_pert_dir,
-        eval_flowdir,
-        eval_pose_dir,
-        device=args.device,
-    )
-
-    traj_adv_test_criterions_list = test_adv_trajectories(
-        test_dataloader,
-        args.model,
-        motions_target_test_list,
-        attack,
-        best_pert,
-        args.criterions,
-        args.window_size,
-        args.save_imgs,
-        args.save_flow,
-        args.save_pose,
-        test_adv_img_dir,
-        test_adv_pert_dir,
-        test_flowdir,
-        test_pose_dir,
-        device=args.device,
-    )
-
-    del best_pert
-    del eval_clean_loss_list
-    del eval_all_loss_list
-    del eval_all_best_loss_list
-
-    del adv_eval_loss_list
-    del adv_test_loss_list
-    torch.cuda.empty_cache()
-    gc.collect()
-
-    return (
-        traj_adv_train_criterions_list,
-        traj_adv_eval_criterions_list,
-        traj_adv_test_criterions_list,
-    )
-
-
-def carmel_collect_and_report_folds_mean_result(
-    folds_frames_clean_crit_means,
-    folds_frames_clean_crit_stds,
-    folds_frames_adv_crit_means,
-    folds_frames_adv_crit_stds,
-    folds_frames_delta_crit_means,
-    folds_frames_delta_crit_stds,
-    folds_frames_ratio_crit_means,
-    folds_frames_ratio_crit_stds,
-    folds_frames_delta_ratio_crit_means,
-    folds_frames_delta_ratio_crit_stds,
-    frames_clean_crit_mean,
-    frames_clean_crit_std,
-    frames_adv_crit_mean,
-    frames_adv_crit_std,
-    frames_delta_crit_mean,
-    frames_delta_crit_std,
-    frames_ratio_crit_mean,
-    frames_ratio_crit_std,
-    frames_delta_ratio_crit_mean,
-    frames_delta_ratio_crit_std,
-    crit_str,
-):
-
-    collect_columns(frames_clean_crit_mean, folds_frames_clean_crit_means)
-    collect_columns(frames_clean_crit_std, folds_frames_clean_crit_stds)
-    collect_columns(frames_adv_crit_mean, folds_frames_adv_crit_means)
-    collect_columns(frames_adv_crit_std, folds_frames_adv_crit_stds)
-    collect_columns(frames_delta_crit_mean, folds_frames_delta_crit_means)
-    collect_columns(frames_delta_crit_std, folds_frames_delta_crit_stds)
-    collect_columns(frames_ratio_crit_mean, folds_frames_ratio_crit_means)
-    collect_columns(frames_ratio_crit_std, folds_frames_ratio_crit_stds)
-    collect_columns(frames_delta_ratio_crit_mean, folds_frames_delta_ratio_crit_means)
-    collect_columns(frames_delta_ratio_crit_std, folds_frames_delta_ratio_crit_stds)
 
 
 def report_mean_results(
@@ -1546,12 +1230,419 @@ def report_mean_results(
     print(folds_frames_delta_ratio_crit_std)
 
 
-def carmel_run_attacks_train_validation_oos_test(args):
-    print("CARMEL TRAIN: Dividing the samples into train, validation and test sets")
+def collect_and_report_folds_mean_result(
+    folds_frames_clean_crit_means,
+    folds_frames_clean_crit_stds,
+    folds_frames_adv_crit_means,
+    folds_frames_adv_crit_stds,
+    folds_frames_delta_crit_means,
+    folds_frames_delta_crit_stds,
+    folds_frames_ratio_crit_means,
+    folds_frames_ratio_crit_stds,
+    folds_frames_delta_ratio_crit_means,
+    folds_frames_delta_ratio_crit_stds,
+    frames_clean_crit_mean,
+    frames_clean_crit_std,
+    frames_adv_crit_mean,
+    frames_adv_crit_std,
+    frames_delta_crit_mean,
+    frames_delta_crit_std,
+    frames_ratio_crit_mean,
+    frames_ratio_crit_std,
+    frames_delta_ratio_crit_mean,
+    frames_delta_ratio_crit_std,
+    crit_str,
+):
 
+    collect_columns(frames_clean_crit_mean, folds_frames_clean_crit_means)
+    collect_columns(frames_clean_crit_std, folds_frames_clean_crit_stds)
+    collect_columns(frames_adv_crit_mean, folds_frames_adv_crit_means)
+    collect_columns(frames_adv_crit_std, folds_frames_adv_crit_stds)
+    collect_columns(frames_delta_crit_mean, folds_frames_delta_crit_means)
+    collect_columns(frames_delta_crit_std, folds_frames_delta_crit_stds)
+    collect_columns(frames_ratio_crit_mean, folds_frames_ratio_crit_means)
+    collect_columns(frames_ratio_crit_std, folds_frames_ratio_crit_stds)
+    collect_columns(frames_delta_ratio_crit_mean, folds_frames_delta_ratio_crit_means)
+    collect_columns(frames_delta_ratio_crit_std, folds_frames_delta_ratio_crit_stds)
+
+    report_mean_results(
+        folds_frames_clean_crit_means,
+        folds_frames_clean_crit_stds,
+        folds_frames_adv_crit_means,
+        folds_frames_adv_crit_stds,
+        folds_frames_delta_crit_means,
+        folds_frames_delta_crit_stds,
+        folds_frames_ratio_crit_means,
+        folds_frames_ratio_crit_stds,
+        folds_frames_delta_ratio_crit_means,
+        folds_frames_delta_ratio_crit_stds,
+        crit_str,
+        final_report=False,
+    )
+
+
+def report_best_results(
+    folds_frames_clean_crit_means,
+    folds_frames_clean_crit_stds,
+    folds_frames_adv_crit_means,
+    folds_frames_adv_crit_stds,
+    folds_frames_delta_crit_means,
+    folds_frames_delta_crit_stds,
+    folds_frames_ratio_crit_means,
+    folds_frames_ratio_crit_stds,
+    folds_frames_delta_ratio_crit_means,
+    folds_frames_delta_ratio_crit_stds,
+    crit_str,
+    final_report=True,
+):
+    best_result_idx = np.argmax(folds_frames_adv_crit_means[-1])
+
+    folds_frames_clean_crit_mean = [
+        rms_list[best_result_idx] for rms_list in folds_frames_clean_crit_means
+    ]
+    folds_frames_clean_crit_std = [
+        rms_list[best_result_idx] for rms_list in folds_frames_clean_crit_stds
+    ]
+    folds_frames_adv_crit_mean = [
+        rms_list[best_result_idx] for rms_list in folds_frames_adv_crit_means
+    ]
+    folds_frames_adv_crit_std = [
+        rms_list[best_result_idx] for rms_list in folds_frames_adv_crit_stds
+    ]
+    folds_frames_delta_crit_mean = [
+        rms_list[best_result_idx] for rms_list in folds_frames_delta_crit_means
+    ]
+    folds_frames_delta_crit_std = [
+        rms_list[best_result_idx] for rms_list in folds_frames_delta_crit_stds
+    ]
+    folds_frames_ratio_crit_mean = [
+        rms_list[best_result_idx] for rms_list in folds_frames_ratio_crit_means
+    ]
+    folds_frames_ratio_crit_std = [
+        rms_list[best_result_idx] for rms_list in folds_frames_ratio_crit_stds
+    ]
+    folds_frames_delta_ratio_crit_mean = [
+        rms_list[best_result_idx] for rms_list in folds_frames_delta_ratio_crit_means
+    ]
+    folds_frames_delta_ratio_crit_std = [
+        rms_list[best_result_idx] for rms_list in folds_frames_delta_ratio_crit_stds
+    ]
+
+    folds_tested_str = str(len(folds_frames_clean_crit_means[0]))
+    if final_report:
+        folds_tested_str = "all (" + folds_tested_str + ")"
+
+    print("reporting the best results for criterion: " + crit_str)
+    print(
+        "the best results over "
+        + folds_tested_str
+        + " eval-sets were achieved for evaluation folder idx: "
+        + str(best_result_idx)
+    )
+    print(
+        "best folds_frames_clean_"
+        + crit_str
+        + "_mean over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_clean_crit_mean)
+    print(
+        "best folds_frames_clean_"
+        + crit_str
+        + "_std over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_clean_crit_std)
+    print(
+        "best folds_frames_adv_"
+        + crit_str
+        + "_mean over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_adv_crit_mean)
+    print(
+        "best folds_frames_adv_"
+        + crit_str
+        + "_std over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_adv_crit_std)
+    print(
+        "best folds_frames_delta_"
+        + crit_str
+        + "_mean over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_delta_crit_mean)
+    print(
+        "best folds_frames_delta_"
+        + crit_str
+        + "_std over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_delta_crit_std)
+    print(
+        "best folds_frames_ratio_"
+        + crit_str
+        + "_mean over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_ratio_crit_mean)
+    print(
+        "best folds_frames_ratio_"
+        + crit_str
+        + "_std over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_ratio_crit_std)
+    print(
+        "best folds_frames_delta_ratio_"
+        + crit_str
+        + "_mean over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_delta_ratio_crit_mean)
+    print(
+        "best folds_frames_delta_ratio_"
+        + crit_str
+        + "_std over "
+        + folds_tested_str
+        + " eval-sets:"
+    )
+    print(folds_frames_delta_ratio_crit_std)
+
+
+def open_loop_make_folders(
+    output_dir,
+    eval_fold_idx,
+    save_results,
+    save_best_pert,
+    save_flow,
+    save_pose,
+    save_imgs,
+):
+    (
+        output_dir,
+        adv_best_pert_dir,
+        train_output_dir,
+        train_flowdir,
+        train_pose_dir,
+        train_img_dir,
+        train_adv_img_dir,
+        train_adv_pert_dir,
+        eval_output_dir,
+        eval_flowdir,
+        eval_pose_dir,
+        eval_img_dir,
+        eval_adv_img_dir,
+        eval_adv_pert_dir,
+        test_output_dir,
+        test_flowdir,
+        test_pose_dir,
+        test_img_dir,
+        test_adv_img_dir,
+        test_adv_pert_dir,
+    ) = make_exp_folders(
+        output_dir,
+        eval_fold_idx,
+        save_results,
+        save_best_pert,
+        save_flow,
+        save_pose,
+        save_imgs,
+        fold_idx_str="open_loop_eval_fold_idx",
+        make_test_folder=False,
+    )
+    return (
+        output_dir,
+        adv_best_pert_dir,
+        train_output_dir,
+        train_flowdir,
+        train_pose_dir,
+        train_img_dir,
+        train_adv_img_dir,
+        train_adv_pert_dir,
+        eval_output_dir,
+        eval_flowdir,
+        eval_pose_dir,
+        eval_img_dir,
+        eval_adv_img_dir,
+        eval_adv_pert_dir,
+    )
+
+
+def make_output_folders(output_dir, save_flow, save_pose, save_imgs):
+    flowdir = None
+    pose_dir = None
+    img_dir = None
+    adv_img_dir = None
+    adv_pert_dir = None
+
+    if save_flow:
+        flowdir = output_dir + "/flow"
+        if not isdir(flowdir):
+            mkdir(flowdir)
+    if save_pose:
+        pose_dir = output_dir + "/pose"
+        if not isdir(pose_dir):
+            mkdir(pose_dir)
+    if save_imgs:
+        img_dir = output_dir + "/clean_images"
+        if not isdir(img_dir):
+            mkdir(img_dir)
+        adv_img_dir = output_dir + "/adv_images"
+        if not isdir(adv_img_dir):
+            mkdir(adv_img_dir)
+        adv_pert_dir = output_dir + "/adv_pert"
+        if not isdir(adv_pert_dir):
+            mkdir(adv_pert_dir)
+
+    return flowdir, pose_dir, img_dir, adv_img_dir, adv_pert_dir
+
+
+def make_exp_folders(
+    output_dir,
+    test_fold_idx,
+    save_results,
+    save_best_pert,
+    save_flow,
+    save_pose,
+    save_imgs,
+    fold_idx_str="out_of_sample_test_fold_idx",
+    make_test_folder=True,
+):
+
+    adv_best_pert_dir = None
+    train_output_dir = None
+    train_flowdir = None
+    train_pose_dir = None
+    train_img_dir = None
+    train_adv_img_dir = None
+    train_adv_pert_dir = None
+    eval_output_dir = None
+    eval_flowdir = None
+    eval_pose_dir = None
+    eval_img_dir = None
+    eval_adv_img_dir = None
+    eval_adv_pert_dir = None
+    test_output_dir = None
+    test_flowdir = None
+    test_pose_dir = None
+    test_img_dir = None
+    test_adv_img_dir = None
+    test_adv_pert_dir = None
+
+    print("save_results")
+    print(save_results)
+    if save_results:
+        output_dir = output_dir + "/" + fold_idx_str + "_" + str(test_fold_idx)
+        if not isdir(output_dir):
+            mkdir(output_dir)
+        print("save_best_pert")
+        print(save_best_pert)
+        if save_best_pert:
+            adv_best_pert_dir = output_dir + "/adv_best_pert"
+            if not isdir(adv_best_pert_dir):
+                mkdir(adv_best_pert_dir)
+            print("adv_best_pert_dir")
+            print(adv_best_pert_dir)
+
+        train_output_dir = output_dir + "/train"
+        if not isdir(train_output_dir):
+            mkdir(train_output_dir)
+        (
+            train_flowdir,
+            train_pose_dir,
+            train_img_dir,
+            train_adv_img_dir,
+            train_adv_pert_dir,
+        ) = make_output_folders(train_output_dir, save_flow, save_pose, save_imgs)
+        eval_output_dir = output_dir + "/eval"
+        if not isdir(eval_output_dir):
+            mkdir(eval_output_dir)
+        (
+            eval_flowdir,
+            eval_pose_dir,
+            eval_img_dir,
+            eval_adv_img_dir,
+            eval_adv_pert_dir,
+        ) = make_output_folders(eval_output_dir, save_flow, save_pose, save_imgs)
+        if make_test_folder:
+            test_output_dir = output_dir + "/test"
+            if not isdir(test_output_dir):
+                mkdir(test_output_dir)
+            (
+                test_flowdir,
+                test_pose_dir,
+                test_img_dir,
+                test_adv_img_dir,
+                test_adv_pert_dir,
+            ) = make_output_folders(test_output_dir, save_flow, save_pose, save_imgs)
+
+    print("adv_best_pert_dir")
+    print(adv_best_pert_dir)
+
+    return (
+        output_dir,
+        adv_best_pert_dir,
+        train_output_dir,
+        train_flowdir,
+        train_pose_dir,
+        train_img_dir,
+        train_adv_img_dir,
+        train_adv_pert_dir,
+        eval_output_dir,
+        eval_flowdir,
+        eval_pose_dir,
+        eval_img_dir,
+        eval_adv_img_dir,
+        eval_adv_pert_dir,
+        test_output_dir,
+        test_flowdir,
+        test_pose_dir,
+        test_img_dir,
+        test_adv_img_dir,
+        test_adv_pert_dir,
+    )
+
+
+def masked_list(lst, indices):
+    return [lst[idx] for idx in indices]
+
+
+def run_attacks_open_loop_opt(args):
+    print("Optimizing an adversarial perturbation in open loop format")
+    print(
+        "In each iteration, the data folders are split between a train-set"
+        "and a eval-set containing a single data folder"
+    )
+    print(
+        "An adversarial perturbation will be trained on the train-set, "
+        "and the best performing perturbation on the eval-set will be noted"
+    )
+    print("The best performing perturbation over all data-sets will than be reported")
+    print(
+        "A single universal perturbation will be produced and then tested on the dataset"
+    )
+    print("args.attack")
+    print(args.attack)
+    datastr = args.datastr
+
+    if args.custom_data:
+        datastr += "_custom"
+    elif args.real_data:
+        datastr += "_real_data"
     attack = args.attack_obj
 
-    # ? What is 'clean_multi_input?'
     (
         dataset_idx_list,
         dataset_name_list,
@@ -1563,7 +1654,15 @@ def carmel_run_attacks_train_validation_oos_test(args):
     ) = test_clean_multi_inputs(args)
 
     motions_target_list = motions_gt_list
-
+    if args.attack_target_clean:
+        print(
+            "clean VO outputs will be used instead of ground truth, and clean deviation will be reconfigured to 0"
+        )
+        motions_target_list = traj_clean_motions
+        traj_clean_criterions_list = [
+            [[0 for val in clean_crit_list] for clean_crit_list in traj_clean_crit_list]
+            for traj_clean_crit_list in traj_clean_criterions_list
+        ]
     (
         traj_clean_rms_list,
         traj_clean_mean_partial_rms_list,
@@ -1573,9 +1672,19 @@ def carmel_run_attacks_train_validation_oos_test(args):
 
     folds_num = args.traj_datasets
     folds_indices_list = list(range(folds_num))
-    print("evaluating over " + str(folds_num) + " datasets folds")
+    eval_folds_num = args.open_loop_folders
+    if eval_folds_num > folds_num:
+        eval_folds_num = folds_num
+    eval_folds_indices_list = list(range(eval_folds_num))
+    print(
+        "optimizing attack with "
+        + str(eval_folds_num)
+        + " datasets folds as an optional evaluation set"
+    )
     print("folds_indices_list")
     print(folds_indices_list)
+    print("eval_folds_indices_list")
+    print(eval_folds_indices_list)
 
     folds_frames_clean_train_rms_means = [[] for i in range(args.traj_len)]
     folds_frames_clean_train_rms_stds = [[] for i in range(args.traj_len)]
@@ -1713,75 +1822,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         [] for i in range(args.traj_len)
     ]
 
-    folds_frames_clean_test_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_clean_test_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_ratio_test_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_delta_ratio_test_rms_stds = [[] for i in range(args.traj_len)]
-
-    folds_frames_clean_test_mean_partial_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_clean_test_mean_partial_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_mean_partial_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_mean_partial_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_mean_partial_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_mean_partial_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_mean_partial_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_mean_partial_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_ratio_test_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_delta_ratio_test_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-
-    folds_frames_clean_test_target_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_clean_test_target_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_target_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_adv_test_target_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_target_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_delta_test_target_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_target_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_ratio_test_target_rms_stds = [[] for i in range(args.traj_len)]
-    folds_frames_delta_ratio_test_target_rms_means = [[] for i in range(args.traj_len)]
-    folds_frames_delta_ratio_test_target_rms_stds = [[] for i in range(args.traj_len)]
-
-    folds_frames_clean_test_target_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_clean_test_target_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_adv_test_target_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_adv_test_target_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_delta_test_target_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_delta_test_target_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_ratio_test_target_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_ratio_test_target_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_delta_ratio_test_target_mean_partial_rms_means = [
-        [] for i in range(args.traj_len)
-    ]
-    folds_frames_delta_ratio_test_target_mean_partial_rms_stds = [
-        [] for i in range(args.traj_len)
-    ]
-
-    for test_fold_idx in folds_indices_list:
+    for eval_fold_idx in eval_folds_indices_list:
         (
             output_dir,
             adv_best_pert_dir,
@@ -1797,54 +1838,18 @@ def carmel_run_attacks_train_validation_oos_test(args):
             eval_img_dir,
             eval_adv_img_dir,
             eval_adv_pert_dir,
-            test_output_dir,
-            test_flowdir,
-            test_pose_dir,
-            test_img_dir,
-            test_adv_img_dir,
-            test_adv_pert_dir,
-        ) = carmel_make_train_valid_folders(
+        ) = open_loop_make_folders(
             args.output_dir,
-            test_fold_idx,
+            eval_fold_idx,
             args.save_results,
             args.save_best_pert,
             args.save_flow,
             args.save_pose,
             args.save_imgs,
         )
+        print("adv_best_pert_dir")
+        print(adv_best_pert_dir)
 
-        test_indices = [
-            traj_idx
-            for traj_idx in traj_indices
-            if dataset_idx_list[traj_idx] == test_fold_idx
-        ]
-        test_dataset = args.dataset_class(
-            args.test_dir,
-            processed_data_folder=args.processed_data_dir,
-            preprocessed_data=True,
-            transform=args.transform,
-            data_size=(args.image_height, args.image_width),
-            focalx=args.focalx,
-            focaly=args.focaly,
-            centerx=args.centerx,
-            centery=args.centery,
-            max_traj_len=args.max_traj_len,
-            max_dataset_traj_num=args.max_traj_num,
-            max_traj_datasets=args.max_traj_datasets,
-            folder_indices_list=[test_fold_idx],
-        )
-        test_dataloader = DataLoader(
-            test_dataset,
-            batch_size=args.batch_size,
-            shuffle=False,
-            num_workers=args.worker_num,
-        )
-
-        #! Carmel to do: Ameliorate this... thing.
-        while True:
-            eval_fold_idx = random.choice(folds_indices_list)
-            if eval_fold_idx != test_fold_idx:
-                break
         eval_indices = [
             traj_idx
             for traj_idx in traj_indices
@@ -1873,14 +1878,10 @@ def carmel_run_attacks_train_validation_oos_test(args):
         )
 
         train_indices = [
-            traj_idx
-            for traj_idx in traj_indices
-            if (traj_idx not in test_indices and traj_idx not in eval_indices)
+            traj_idx for traj_idx in traj_indices if (traj_idx not in eval_indices)
         ]
         train_folders_indices = [
-            fold_idx
-            for fold_idx in folds_indices_list
-            if (fold_idx != test_fold_idx and fold_idx != eval_fold_idx)
+            fold_idx for fold_idx in folds_indices_list if fold_idx != eval_fold_idx
         ]
         train_dataset = args.dataset_class(
             args.test_dir,
@@ -1904,119 +1905,130 @@ def carmel_run_attacks_train_validation_oos_test(args):
             num_workers=args.worker_num,
         )
 
-        print("test_fold_idx")
-        print(test_fold_idx)
         print("eval_fold_idx")
         print(eval_fold_idx)
+        print("eval_indices")
+        print(eval_indices)
         print("train_folders_indices")
         print(train_folders_indices)
+        print("train_indices")
+        print(train_indices)
 
-        train_dataset_indices = carmel_get_list_subset(dataset_idx_list, train_indices)
-        train_dataset_names = carmel_get_list_subset(dataset_name_list, train_indices)
-        train_traj_names = carmel_get_list_subset(traj_name_list, train_indices)
-        motions_target_train_list = carmel_get_list_subset(
-            motions_target_list, train_indices
-        )
-        traj_clean_train_rms_list = carmel_get_list_subset(
-            traj_clean_rms_list, train_indices
-        )
-        traj_clean_train_mean_partial_rms_list = carmel_get_list_subset(
+        train_dataset_indices = masked_list(dataset_idx_list, train_indices)
+        train_dataset_names = masked_list(dataset_name_list, train_indices)
+        train_traj_names = masked_list(traj_name_list, train_indices)
+        motions_target_train_list = masked_list(motions_target_list, train_indices)
+        traj_clean_train_rms_list = masked_list(traj_clean_rms_list, train_indices)
+        traj_clean_train_mean_partial_rms_list = masked_list(
             traj_clean_mean_partial_rms_list, train_indices
         )
-        traj_clean_train_target_rms_list = carmel_get_list_subset(
+        traj_clean_train_target_rms_list = masked_list(
             traj_clean_target_rms_list, train_indices
         )
-        traj_clean_train_target_mean_partial_rms_list = carmel_get_list_subset(
+        traj_clean_train_target_mean_partial_rms_list = masked_list(
             traj_clean_target_mean_partial_rms_list, train_indices
         )
 
-        eval_dataset_indices = carmel_get_list_subset(dataset_idx_list, eval_indices)
-        eval_dataset_names = carmel_get_list_subset(dataset_name_list, eval_indices)
-        eval_traj_names = carmel_get_list_subset(traj_name_list, eval_indices)
-        motions_target_eval_list = carmel_get_list_subset(
-            motions_target_list, eval_indices
-        )
-        traj_clean_eval_rms_list = carmel_get_list_subset(
-            traj_clean_rms_list, eval_indices
-        )
-        traj_clean_eval_mean_partial_rms_list = carmel_get_list_subset(
+        eval_dataset_indices = masked_list(dataset_idx_list, eval_indices)
+        eval_dataset_names = masked_list(dataset_name_list, eval_indices)
+        eval_traj_names = masked_list(traj_name_list, eval_indices)
+        motions_target_eval_list = masked_list(motions_target_list, eval_indices)
+        traj_clean_eval_rms_list = masked_list(traj_clean_rms_list, eval_indices)
+        traj_clean_eval_mean_partial_rms_list = masked_list(
             traj_clean_mean_partial_rms_list, eval_indices
         )
-        traj_clean_eval_target_rms_list = carmel_get_list_subset(
+        traj_clean_eval_target_rms_list = masked_list(
             traj_clean_target_rms_list, eval_indices
         )
-        traj_clean_eval_target_mean_partial_rms_list = carmel_get_list_subset(
+        traj_clean_eval_target_mean_partial_rms_list = masked_list(
             traj_clean_target_mean_partial_rms_list, eval_indices
         )
 
-        test_dataset_indices = carmel_get_list_subset(dataset_idx_list, test_indices)
-        test_dataset_names = carmel_get_list_subset(dataset_name_list, test_indices)
-        test_traj_names = carmel_get_list_subset(traj_name_list, test_indices)
-        motions_target_test_list = carmel_get_list_subset(
-            motions_target_list, test_indices
-        )
-        traj_clean_test_rms_list = carmel_get_list_subset(
-            traj_clean_rms_list, test_indices
-        )
-        traj_clean_test_mean_partial_rms_list = carmel_get_list_subset(
-            traj_clean_mean_partial_rms_list, test_indices
-        )
-        traj_clean_test_target_rms_list = carmel_get_list_subset(
-            traj_clean_target_rms_list, test_indices
-        )
-        traj_clean_test_target_mean_partial_rms_list = carmel_get_list_subset(
-            traj_clean_target_mean_partial_rms_list, test_indices
-        )
+        print("optimizing attacks on trajectories:")
+        print(train_traj_names)
+        print("evaluate attacks on trajectories:")
+        print(eval_traj_names)
 
         (
-            traj_adv_train_criterions_list,
-            traj_adv_eval_criterions_list,
-            traj_adv_test_criterions_list,
-        ) = test_perturb_trajectories(
-            args,
-            train_traj_names,
-            eval_traj_names,
-            test_traj_names,
-            attack,
+            best_pert,
+            eval_clean_loss_list,
+            eval_all_loss_list,
+            eval_all_best_loss_list,
+        ) = attack.perturb(
             train_dataloader,
             motions_target_train_list,
-            eval_dataloader,
-            motions_target_eval_list,
-            test_dataloader,
-            motions_target_test_list,
-            adv_best_pert_dir,
+            eps=args.eps,
+            device=args.device,
+            eval_data_loader=eval_dataloader,
+            eval_y_list=motions_target_eval_list,
+        )
+
+        adv_eval_loss_list = attack.test_pert(
+            best_pert, eval_dataloader, motions_target_eval_list, device=args.device
+        )
+
+        print("eval_clean_loss_list")
+        print(eval_clean_loss_list)
+        print("eval_all_loss_list")
+        print(eval_all_loss_list)
+        print("eval_all_best_loss_list")
+        print(eval_all_best_loss_list)
+        eval_best_loss_list = eval_all_best_loss_list[-1]
+        print("eval_best_loss_list")
+        print(eval_best_loss_list)
+        print("adv_eval_loss_list")
+        print(adv_eval_loss_list)
+
+        if args.save_best_pert:
+            save_image(best_pert[0], adv_best_pert_dir + "/" + "adv_best_pert.png")
+
+        traj_adv_train_criterions_list = test_adv_trajectories(
+            train_dataloader,
+            args.model,
+            motions_target_train_list,
+            attack,
+            best_pert,
+            args.criterions,
+            args.window_size,
+            args.save_imgs,
+            args.save_flow,
+            args.save_pose,
             train_adv_img_dir,
             train_adv_pert_dir,
             train_flowdir,
             train_pose_dir,
-            eval_adv_img_dir,
-            eval_adv_pert_dir,
-            eval_flowdir,
-            eval_pose_dir,
-            test_adv_img_dir,
-            test_adv_pert_dir,
-            test_flowdir,
-            test_pose_dir,
+            device=args.device,
         )
-
         (
             traj_adv_train_rms_list,
             traj_adv_train_mean_partial_rms_list,
             traj_adv_train_target_rms_list,
             traj_adv_train_target_mean_partial_rms_list,
         ) = traj_adv_train_criterions_list
+
+        traj_adv_eval_criterions_list = test_adv_trajectories(
+            eval_dataloader,
+            args.model,
+            motions_target_eval_list,
+            attack,
+            best_pert,
+            args.criterions,
+            args.window_size,
+            args.save_imgs,
+            args.save_flow,
+            args.save_pose,
+            eval_adv_img_dir,
+            eval_adv_pert_dir,
+            eval_flowdir,
+            eval_pose_dir,
+            device=args.device,
+        )
         (
             traj_adv_eval_rms_list,
             traj_adv_eval_mean_partial_rms_list,
             traj_adv_eval_target_rms_list,
             traj_adv_eval_target_mean_partial_rms_list,
         ) = traj_adv_eval_criterions_list
-        (
-            traj_adv_test_rms_list,
-            traj_adv_test_mean_partial_rms_list,
-            traj_adv_test_target_rms_list,
-            traj_adv_test_target_mean_partial_rms_list,
-        ) = traj_adv_test_criterions_list
 
         (
             frames_clean_train_target_mean_partial_rms_mean,
@@ -2208,101 +2220,6 @@ def carmel_run_attacks_train_validation_oos_test(args):
             experiment_name="eval",
         )
 
-        (
-            frames_clean_test_target_mean_partial_rms_mean,
-            frames_clean_test_target_mean_partial_rms_std,
-            frames_adv_test_target_mean_partial_rms_mean,
-            frames_adv_test_target_mean_partial_rms_std,
-            frames_delta_test_target_mean_partial_rms_mean,
-            frames_delta_test_target_mean_partial_rms_std,
-            frames_ratio_test_target_mean_partial_rms_mean,
-            frames_ratio_test_target_mean_partial_rms_std,
-            frames_delta_ratio_test_target_mean_partial_rms_mean,
-            frames_delta_ratio_test_target_mean_partial_rms_std,
-        ) = report_adv_deviation(
-            test_dataset_indices,
-            test_dataset_names,
-            test_traj_names,
-            test_indices,
-            traj_clean_test_target_mean_partial_rms_list,
-            traj_adv_test_target_mean_partial_rms_list,
-            args.save_csv,
-            test_output_dir,
-            crit_str="target_mean_partial_rms",
-            experiment_name="test",
-        )
-        (
-            frames_clean_test_target_rms_mean,
-            frames_clean_test_target_rms_std,
-            frames_adv_test_target_rms_mean,
-            frames_adv_test_target_rms_std,
-            frames_delta_test_target_rms_mean,
-            frames_delta_test_target_rms_std,
-            frames_ratio_test_target_rms_mean,
-            frames_ratio_test_target_rms_std,
-            frames_delta_ratio_test_target_rms_mean,
-            frames_delta_ratio_test_target_rms_std,
-        ) = report_adv_deviation(
-            test_dataset_indices,
-            test_dataset_names,
-            test_traj_names,
-            test_indices,
-            traj_clean_test_target_rms_list,
-            traj_adv_test_target_rms_list,
-            args.save_csv,
-            test_output_dir,
-            crit_str="target_rms",
-            experiment_name="test",
-        )
-
-        (
-            frames_clean_test_mean_partial_rms_mean,
-            frames_clean_test_mean_partial_rms_std,
-            frames_adv_test_mean_partial_rms_mean,
-            frames_adv_test_mean_partial_rms_std,
-            frames_delta_test_mean_partial_rms_mean,
-            frames_delta_test_mean_partial_rms_std,
-            frames_ratio_test_mean_partial_rms_mean,
-            frames_ratio_test_mean_partial_rms_std,
-            frames_delta_ratio_test_mean_partial_rms_mean,
-            frames_delta_ratio_test_mean_partial_rms_std,
-        ) = report_adv_deviation(
-            test_dataset_indices,
-            test_dataset_names,
-            test_traj_names,
-            test_indices,
-            traj_clean_test_mean_partial_rms_list,
-            traj_adv_test_mean_partial_rms_list,
-            args.save_csv,
-            test_output_dir,
-            crit_str="mean_partial_rms",
-            experiment_name="test",
-        )
-
-        (
-            frames_clean_test_rms_mean,
-            frames_clean_test_rms_std,
-            frames_adv_test_rms_mean,
-            frames_adv_test_rms_std,
-            frames_delta_test_rms_mean,
-            frames_delta_test_rms_std,
-            frames_ratio_test_rms_mean,
-            frames_ratio_test_rms_std,
-            frames_delta_ratio_test_rms_mean,
-            frames_delta_ratio_test_rms_std,
-        ) = report_adv_deviation(
-            test_dataset_indices,
-            test_dataset_names,
-            test_traj_names,
-            test_indices,
-            traj_clean_test_rms_list,
-            traj_adv_test_rms_list,
-            args.save_csv,
-            test_output_dir,
-            crit_str="rms",
-            experiment_name="test",
-        )
-
         del train_dataset_indices
         del train_dataset_names
         del train_traj_names
@@ -2321,19 +2238,16 @@ def carmel_run_attacks_train_validation_oos_test(args):
         del traj_clean_eval_target_rms_list
         del traj_clean_eval_target_mean_partial_rms_list
 
-        del test_dataset_indices
-        del test_dataset_names
-        del test_traj_names
-        del motions_target_test_list
-        del traj_clean_test_rms_list
-        del traj_clean_test_mean_partial_rms_list
-        del traj_clean_test_target_rms_list
-        del traj_clean_test_target_mean_partial_rms_list
+        del best_pert
+        del eval_clean_loss_list
+        del eval_all_loss_list
+        del eval_all_best_loss_list
 
+        del adv_eval_loss_list
         torch.cuda.empty_cache()
         gc.collect()
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_train_target_mean_partial_rms_means,
             folds_frames_clean_train_target_mean_partial_rms_stds,
             folds_frames_adv_train_target_mean_partial_rms_means,
@@ -2357,7 +2271,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="train_target_mean_partial_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_train_target_rms_means,
             folds_frames_clean_train_target_rms_stds,
             folds_frames_adv_train_target_rms_means,
@@ -2381,7 +2295,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="train_target_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_train_mean_partial_rms_means,
             folds_frames_clean_train_mean_partial_rms_stds,
             folds_frames_adv_train_mean_partial_rms_means,
@@ -2405,7 +2319,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="train_mean_partial_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_train_rms_means,
             folds_frames_clean_train_rms_stds,
             folds_frames_adv_train_rms_means,
@@ -2429,7 +2343,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="train_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_eval_target_mean_partial_rms_means,
             folds_frames_clean_eval_target_mean_partial_rms_stds,
             folds_frames_adv_eval_target_mean_partial_rms_means,
@@ -2453,7 +2367,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="eval_target_mean_partial_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_eval_target_rms_means,
             folds_frames_clean_eval_target_rms_stds,
             folds_frames_adv_eval_target_rms_means,
@@ -2477,7 +2391,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="eval_target_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_eval_mean_partial_rms_means,
             folds_frames_clean_eval_mean_partial_rms_stds,
             folds_frames_adv_eval_mean_partial_rms_means,
@@ -2501,7 +2415,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="eval_mean_partial_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
+        collect_and_report_folds_mean_result(
             folds_frames_clean_eval_rms_means,
             folds_frames_clean_eval_rms_stds,
             folds_frames_adv_eval_rms_means,
@@ -2525,103 +2439,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
             crit_str="eval_rms",
         )
 
-        carmel_collect_and_report_folds_mean_result(
-            folds_frames_clean_test_target_mean_partial_rms_means,
-            folds_frames_clean_test_target_mean_partial_rms_stds,
-            folds_frames_adv_test_target_mean_partial_rms_means,
-            folds_frames_adv_test_target_mean_partial_rms_stds,
-            folds_frames_delta_test_target_mean_partial_rms_means,
-            folds_frames_delta_test_target_mean_partial_rms_stds,
-            folds_frames_ratio_test_target_mean_partial_rms_means,
-            folds_frames_ratio_test_target_mean_partial_rms_stds,
-            folds_frames_delta_ratio_test_target_mean_partial_rms_means,
-            folds_frames_delta_ratio_test_target_mean_partial_rms_stds,
-            frames_clean_test_target_mean_partial_rms_mean,
-            frames_clean_test_target_mean_partial_rms_std,
-            frames_adv_test_target_mean_partial_rms_mean,
-            frames_adv_test_target_mean_partial_rms_std,
-            frames_delta_test_target_mean_partial_rms_mean,
-            frames_delta_test_target_mean_partial_rms_std,
-            frames_ratio_test_target_mean_partial_rms_mean,
-            frames_ratio_test_target_mean_partial_rms_std,
-            frames_delta_ratio_test_target_mean_partial_rms_mean,
-            frames_delta_ratio_test_target_mean_partial_rms_std,
-            crit_str="test_target_mean_partial_rms",
-        )
-
-        carmel_collect_and_report_folds_mean_result(
-            folds_frames_clean_test_target_rms_means,
-            folds_frames_clean_test_target_rms_stds,
-            folds_frames_adv_test_target_rms_means,
-            folds_frames_adv_test_target_rms_stds,
-            folds_frames_delta_test_target_rms_means,
-            folds_frames_delta_test_target_rms_stds,
-            folds_frames_ratio_test_target_rms_means,
-            folds_frames_ratio_test_target_rms_stds,
-            folds_frames_delta_ratio_test_target_rms_means,
-            folds_frames_delta_ratio_test_target_rms_stds,
-            frames_clean_test_target_rms_mean,
-            frames_clean_test_target_rms_std,
-            frames_adv_test_target_rms_mean,
-            frames_adv_test_target_rms_std,
-            frames_delta_test_target_rms_mean,
-            frames_delta_test_target_rms_std,
-            frames_ratio_test_target_rms_mean,
-            frames_ratio_test_target_rms_std,
-            frames_delta_ratio_test_target_rms_mean,
-            frames_delta_ratio_test_target_rms_std,
-            crit_str="test_target_rms",
-        )
-
-        carmel_collect_and_report_folds_mean_result(
-            folds_frames_clean_test_mean_partial_rms_means,
-            folds_frames_clean_test_mean_partial_rms_stds,
-            folds_frames_adv_test_mean_partial_rms_means,
-            folds_frames_adv_test_mean_partial_rms_stds,
-            folds_frames_delta_test_mean_partial_rms_means,
-            folds_frames_delta_test_mean_partial_rms_stds,
-            folds_frames_ratio_test_mean_partial_rms_means,
-            folds_frames_ratio_test_mean_partial_rms_stds,
-            folds_frames_delta_ratio_test_mean_partial_rms_means,
-            folds_frames_delta_ratio_test_mean_partial_rms_stds,
-            frames_clean_test_mean_partial_rms_mean,
-            frames_clean_test_mean_partial_rms_std,
-            frames_adv_test_mean_partial_rms_mean,
-            frames_adv_test_mean_partial_rms_std,
-            frames_delta_test_mean_partial_rms_mean,
-            frames_delta_test_mean_partial_rms_std,
-            frames_ratio_test_mean_partial_rms_mean,
-            frames_ratio_test_mean_partial_rms_std,
-            frames_delta_ratio_test_mean_partial_rms_mean,
-            frames_delta_ratio_test_mean_partial_rms_std,
-            crit_str="test_mean_partial_rms",
-        )
-
-        carmel_collect_and_report_folds_mean_result(
-            folds_frames_clean_test_rms_means,
-            folds_frames_clean_test_rms_stds,
-            folds_frames_adv_test_rms_means,
-            folds_frames_adv_test_rms_stds,
-            folds_frames_delta_test_rms_means,
-            folds_frames_delta_test_rms_stds,
-            folds_frames_ratio_test_rms_means,
-            folds_frames_ratio_test_rms_stds,
-            folds_frames_delta_ratio_test_rms_means,
-            folds_frames_delta_ratio_test_rms_stds,
-            frames_clean_test_rms_mean,
-            frames_clean_test_rms_std,
-            frames_adv_test_rms_mean,
-            frames_adv_test_rms_std,
-            frames_delta_test_rms_mean,
-            frames_delta_test_rms_std,
-            frames_ratio_test_rms_mean,
-            frames_ratio_test_rms_std,
-            frames_delta_ratio_test_rms_mean,
-            frames_delta_ratio_test_rms_std,
-            crit_str="test_rms",
-        )
-
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_train_target_mean_partial_rms_means,
         folds_frames_clean_train_target_mean_partial_rms_stds,
         folds_frames_adv_train_target_mean_partial_rms_means,
@@ -2635,7 +2453,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="train_target_mean_partial_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_train_target_rms_means,
         folds_frames_clean_train_target_rms_stds,
         folds_frames_adv_train_target_rms_means,
@@ -2649,7 +2467,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="train_target_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_train_mean_partial_rms_means,
         folds_frames_clean_train_mean_partial_rms_stds,
         folds_frames_adv_train_mean_partial_rms_means,
@@ -2663,7 +2481,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="train_mean_partial_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_train_rms_means,
         folds_frames_clean_train_rms_stds,
         folds_frames_adv_train_rms_means,
@@ -2677,7 +2495,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="train_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_eval_target_mean_partial_rms_means,
         folds_frames_clean_eval_target_mean_partial_rms_stds,
         folds_frames_adv_eval_target_mean_partial_rms_means,
@@ -2691,7 +2509,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="eval_target_mean_partial_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_eval_target_rms_means,
         folds_frames_clean_eval_target_rms_stds,
         folds_frames_adv_eval_target_rms_means,
@@ -2705,7 +2523,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="eval_target_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_eval_mean_partial_rms_means,
         folds_frames_clean_eval_mean_partial_rms_stds,
         folds_frames_adv_eval_mean_partial_rms_means,
@@ -2719,7 +2537,7 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="eval_mean_partial_rms",
     )
 
-    report_mean_results(
+    report_best_results(
         folds_frames_clean_eval_rms_means,
         folds_frames_clean_eval_rms_stds,
         folds_frames_adv_eval_rms_means,
@@ -2733,61 +2551,8 @@ def carmel_run_attacks_train_validation_oos_test(args):
         crit_str="eval_rms",
     )
 
-    report_mean_results(
-        folds_frames_clean_test_target_mean_partial_rms_means,
-        folds_frames_clean_test_target_mean_partial_rms_stds,
-        folds_frames_adv_test_target_mean_partial_rms_means,
-        folds_frames_adv_test_target_mean_partial_rms_stds,
-        folds_frames_delta_test_target_mean_partial_rms_means,
-        folds_frames_delta_test_target_mean_partial_rms_stds,
-        folds_frames_ratio_test_target_mean_partial_rms_means,
-        folds_frames_ratio_test_target_mean_partial_rms_stds,
-        folds_frames_delta_ratio_test_target_mean_partial_rms_means,
-        folds_frames_delta_ratio_test_target_mean_partial_rms_stds,
-        crit_str="test_target_mean_partial_rms",
-    )
 
-    report_mean_results(
-        folds_frames_clean_test_target_rms_means,
-        folds_frames_clean_test_target_rms_stds,
-        folds_frames_adv_test_target_rms_means,
-        folds_frames_adv_test_target_rms_stds,
-        folds_frames_delta_test_target_rms_means,
-        folds_frames_delta_test_target_rms_stds,
-        folds_frames_ratio_test_target_rms_means,
-        folds_frames_ratio_test_target_rms_stds,
-        folds_frames_delta_ratio_test_target_rms_means,
-        folds_frames_delta_ratio_test_target_rms_stds,
-        crit_str="test_target_rms",
-    )
-
-    report_mean_results(
-        folds_frames_clean_test_mean_partial_rms_means,
-        folds_frames_clean_test_mean_partial_rms_stds,
-        folds_frames_adv_test_mean_partial_rms_means,
-        folds_frames_adv_test_mean_partial_rms_stds,
-        folds_frames_delta_test_mean_partial_rms_means,
-        folds_frames_delta_test_mean_partial_rms_stds,
-        folds_frames_ratio_test_mean_partial_rms_means,
-        folds_frames_ratio_test_mean_partial_rms_stds,
-        folds_frames_delta_ratio_test_mean_partial_rms_means,
-        folds_frames_delta_ratio_test_mean_partial_rms_stds,
-        crit_str="test_mean_partial_rms",
-    )
-
-    report_mean_results(
-        folds_frames_clean_test_rms_means,
-        folds_frames_clean_test_rms_stds,
-        folds_frames_adv_test_rms_means,
-        folds_frames_adv_test_rms_stds,
-        folds_frames_delta_test_rms_means,
-        folds_frames_delta_test_rms_stds,
-        folds_frames_ratio_test_rms_means,
-        folds_frames_ratio_test_rms_stds,
-        folds_frames_delta_ratio_test_rms_means,
-        folds_frames_delta_ratio_test_rms_stds,
-        crit_str="test_rms",
-    )
+#!END#############################################################
 
 
 def test_clean(args):
@@ -2802,7 +2567,7 @@ def main():
     args = get_args()
     if args.attack is None:
         return test_clean(args)
-    return carmel_run_attacks_train_validation_oos_test(args)
+    return run_attacks_open_loop_opt(args)
 
 
 if __name__ == "__main__":
