@@ -1635,12 +1635,12 @@ def run_attacks_open_loop_opt(args):
     )
     print("args.attack")
     print(args.attack)
-    datastr = args.datastr
+    # datastr = args.datastr
 
-    if args.custom_data:
-        datastr += "_custom"
-    elif args.real_data:
-        datastr += "_real_data"
+    # if args.custom_data:
+    #     datastr += "_custom"
+    # elif args.real_data:
+    #     datastr += "_real_data"
     attack = args.attack_obj
 
     (
@@ -1654,25 +1654,21 @@ def run_attacks_open_loop_opt(args):
     ) = test_clean_multi_inputs(args)
 
     motions_target_list = motions_gt_list
-    if args.attack_target_clean:
-        print(
-            "clean VO outputs will be used instead of ground truth, and clean deviation will be reconfigured to 0"
-        )
-        motions_target_list = traj_clean_motions
-        traj_clean_criterions_list = [
-            [[0 for val in clean_crit_list] for clean_crit_list in traj_clean_crit_list]
-            for traj_clean_crit_list in traj_clean_criterions_list
-        ]
-    (
-        traj_clean_rms_list,
-        traj_clean_mean_partial_rms_list,
-        traj_clean_target_rms_list,
-        traj_clean_target_mean_partial_rms_list,
-    ) = tuple(traj_clean_criterions_list)
+    # if args.attack_target_clean:
+    #     print(
+    #         "clean VO outputs will be used instead of ground truth, and clean deviation will be reconfigured to 0"
+    #     )
+    #     motions_target_list = traj_clean_motions
+    #     traj_clean_criterions_list = [
+    #         [[0 for val in clean_crit_list] for clean_crit_list in traj_clean_crit_list]
+    #         for traj_clean_crit_list in traj_clean_criterions_list
+    #     ]
+    traj_clean_rms_list, traj_clean_mean_partial_rms_list, \
+    traj_clean_target_rms_list, traj_clean_target_mean_partial_rms_list = tuple(traj_clean_criterions_list)
 
     folds_num = args.traj_datasets
     folds_indices_list = list(range(folds_num))
-    eval_folds_num = args.open_loop_folders
+    eval_folds_num = 10
     if eval_folds_num > folds_num:
         eval_folds_num = folds_num
     eval_folds_indices_list = list(range(eval_folds_num))
