@@ -309,6 +309,11 @@ class VOCriterion:
         )
         return t_error, target_t_error
 
+    def rotation_quat_product(self, rot_quat, rot_quat_gt):
+        scalar_product = rot_quat.unsqueeze(1).bmm(rot_quat_gt.unsqueeze(2)).view(-1)
+        r_errors = 1 - scalar_product
+        return r_errors
+
     def calc_rot_quat_product(self, motions, motions_gt):
         traj_rot_quat = angle_axis_to_quaternion(
             motions[:, 3:], order=QuaternionCoeffOrder.WXYZ
