@@ -41,7 +41,7 @@ class AttackModified(Attack):
                 grad_tot += grad
 
             # region delete params
-            del grad
+            # del grad
             del img1_I0
             del img2_I0
             del intrinsic_I0
