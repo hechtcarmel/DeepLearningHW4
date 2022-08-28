@@ -389,7 +389,7 @@ def create_optimizer(args):
     for key, value in default_params.items():
         if key in args:
             optimizer_params[key] = getattr(args, key, default_params[key])
-            # optimizer_params[key] = optimizer_params[key] if optimizer_params[key] is not None else default_params[key]
+            optimizer_params[key] = optimizer_params[key] if optimizer_params[key] is not None else default_params[key]
     print("---------OPTIMIZATION PARAMS----------", optimizer_params, sep='\n')
     optimizer = optimizer_class(**optimizer_params)
     return optimizer
