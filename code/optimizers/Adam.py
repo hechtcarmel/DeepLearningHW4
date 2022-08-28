@@ -26,6 +26,15 @@ class Adam(Optimizer):
     def calc_step(self, dw):
         # dw, db are from current minibatch
         # momentum beta 1
+        print(
+            f'm_dw = {self.m_dw}',
+            f'v_dw = {self.v_dw}',
+            f't = {self.t}'
+            f'beta1 = {self.beta1}',
+            f'beta2 = {self.beta2}',
+            f'epsilon = {self.epsilon}',
+            f'eta = {self.eta}'
+        )
         with torch.no_grad():
             self.t += 1
             # dw = w.grad if dw is None else dw
