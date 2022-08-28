@@ -384,7 +384,8 @@ def create_optimizer(args):
     optimizer_params = dict()
     default_params = optimizer_class.get_params()
     print('----------OPTIMIZATION DEFAULT PARAMS----------', default_params)
-    print('args', '\n', args)
+    from pprint import pprint
+    pprint(args)
     for key, value in default_params.items():
         if key in args:
             optimizer_params[key] = getattr(args, key, default_params[key])
