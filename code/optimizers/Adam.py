@@ -23,12 +23,12 @@ class Adam(Optimizer):
 
 
 
-    def calc_step(self, w, dw=None):
+    def calc_step(self, dw):
         # dw, db are from current minibatch
         # momentum beta 1
         with torch.no_grad():
             self.t += 1
-            dw = w.grad if dw is None else dw
+            # dw = w.grad if dw is None else dw
             # * weights * #
             self.m_dw = self.beta1 * self.m_dw + (1 - self.beta1) * dw
 

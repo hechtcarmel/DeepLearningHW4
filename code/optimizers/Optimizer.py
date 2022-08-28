@@ -10,7 +10,7 @@ class Optimizer(ABC):
     #     self.calc_step(w, dw)
 
     @abstractmethod
-    def calc_step(self, w, dw=None):
+    def calc_step(self, dw):
         raise NotImplementedError
 
     @classmethod
