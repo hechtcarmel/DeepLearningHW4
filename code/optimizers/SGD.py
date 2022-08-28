@@ -15,7 +15,7 @@ class SGD(Optimizer):
         super().__init__()
 
 
-    def calc_step(self, w, dw=None):
+    def calc_step(self, w=None, dw=None):
         with torch.no_grad():
             dw = w.grad if dw is None else dw
             assert dw is not None
