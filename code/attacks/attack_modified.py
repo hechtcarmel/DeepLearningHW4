@@ -41,7 +41,7 @@ class AttackModified(Attack):
                 grad_tot += grad
 
             # region delete params
-            # del grad
+            del grad
             del img1_I0
             del img2_I0
             del intrinsic_I0
@@ -62,7 +62,7 @@ class AttackModified(Attack):
         # do gradient step
         with torch.no_grad():
             grad = self.normalize_grad(grad_tot)
-            pert = self.optimization_update(a_abs, grad, multiplier, pert)
+            pert = self.optimization_update(a_abs, grad_tot, multiplier, pert)
             pert = self.project(pert, eps)
 
         return pert
