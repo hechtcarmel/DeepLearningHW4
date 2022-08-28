@@ -418,9 +418,9 @@ def compute_optimizer_args(args):
 def get_args():
 
     args = parse_args()
-    # args = compute_run_args(args)
-    # args = compute_data_args(args)
-    # args = compute_VO_args(args)
+    args = compute_run_args(args)
+    args = compute_data_args(args)
+    args = compute_VO_args(args)
     args = compute_optimizer_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
