@@ -383,6 +383,7 @@ def create_optimizer(args):
     optimizer_class = optimizers_dict.get(args.name)
     optimizer_params = dict()
     default_params = optimizer_class.get_params()
+    print('----------OPTIMIZATION DEFAULT PARAMS----------', default_params)
     for key, value in default_params.items():
         if key in args:
             optimizer_params[key] = getattr(args, key, default_params[key])
@@ -415,9 +416,9 @@ def compute_optimizer_args(args):
 def get_args():
 
     args = parse_args()
-    args = compute_run_args(args)
-    args = compute_data_args(args)
-    args = compute_VO_args(args)
+    # args = compute_run_args(args)
+    # args = compute_data_args(args)
+    # args = compute_VO_args(args)
     args = compute_optimizer_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
