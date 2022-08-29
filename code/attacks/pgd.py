@@ -81,15 +81,12 @@ class PGD(Attack):
 
         ## bias correction
         m_dw_corr = self.m_dw/(1-self.beta1**t)
-        m_db_corr = self.m_db/(1-self.beta1**t)
         v_dw_corr = self.v_dw/(1-self.beta2**t)
-        v_db_corr = self.v_db/(1-self.beta2**t)
       
         ## update weights and biases
-        w = w - self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
-        b = b - self.eta*(m_db_corr/(np.sqrt(v_db_corr)+self.epsilon))
+        #w = w - self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
 
-
+        grad = self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
 
 
 
