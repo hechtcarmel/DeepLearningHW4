@@ -27,6 +27,16 @@ class PGD(Attack):
                                   sample_window_size, sample_window_stride,
                                   pert_padding)
 
+        ######
+        ######
+        self.m_dw, self.v_dw = 0, 0
+        self.m_db, self.v_db = 0, 0
+        self.beta1 = 0.9
+        self.beta2 = 0.999
+        self.epsilon = 1e-8
+        self.eta = 0.01
+
+
         self.alpha = alpha
 
         self.n_restarts = n_restarts
@@ -43,7 +53,7 @@ class PGD(Attack):
                 self.init_pert = init_pert_transform({'img': self.init_pert})['img'].unsqueeze(0)
 
     def calc_sample_grad_single(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
-                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None):
+                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None, t=1):
         pert = pert.detach()
         pert.requires_grad_()
         img1_adv, img2_adv, output_adv = self.perturb_model_single(pert, img1_I0, img2_I0,
@@ -58,6 +68,40 @@ class PGD(Attack):
         loss_sum = loss.sum(dim=0)
         grad = torch.autograd.grad(loss_sum, [pert])[0].detach()
 
+#########################
+
+        ## dw, db are from current minibatch
+        ## momentum beta 1
+        # *** weights *** #
+        self.m_dw = self.beta1*self.m_dw + (1-self.beta1)*grad
+
+        ## rms beta 2
+        # *** weights *** #
+        self.v_dw = self.beta2*self.v_dw + (1-self.beta2)*(grad**2)
+
+        ## bias correction
+        m_dw_corr = self.m_dw/(1-self.beta1**t)
+        m_db_corr = self.m_db/(1-self.beta1**t)
+        v_dw_corr = self.v_dw/(1-self.beta2**t)
+        v_db_corr = self.v_db/(1-self.beta2**t)
+      
+        ## update weights and biases
+        w = w - self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
+        b = b - self.eta*(m_db_corr/(np.sqrt(v_db_corr)+self.epsilon))
+
+
+
+
+
+
+
+
+
+
+
+#######################
+
+
         del img1_adv
         del img2_adv
         del output_adv
@@ -67,6 +111,7 @@ class PGD(Attack):
 
         return grad
 
+    t = 1
     def calc_sample_grad_split(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
                          scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None):
         sample_data_ind = list(range(img1_I0.shape[0] + 1))
@@ -111,7 +156,7 @@ class PGD(Attack):
                                                      perspective2_window,
                                                      mask1_window,
                                                      mask2_window,
-                                                     device=device)
+                                                     device=device, t=t)
             with torch.no_grad():
                 grad[window_start:window_end] += grad_window
 
@@ -134,6 +179,7 @@ class PGD(Attack):
         del grad_multiplicity
         del grad_multiplicity_expand
         torch.cuda.empty_cache()
+        t+=1
         return grad.to(device)
 
     def perturb(self, data_loader, y_list, eps,
