@@ -397,10 +397,15 @@ def create_optimizer(args):
 
 def create_default_optimizer(args):
     if not args.optimizer:
-        default_optimizer = optimizers_dict['default']()
+        print("TEST3")
+        #default_optimizer = optimizers_dict['default']()
+        default_optimizer = SGD()
         args.__setattr__('optimizer', default_optimizer)
-        args.__setattr__('name', default_optimizer.name)
+        args.__setattr__('name', "SGD")
+        return default_optimizer
+       
     else:
+        print("TEST4")
         args.name = optimizers_dict['default'].name
     optimizer = create_optimizer(args)
     return optimizer
@@ -409,14 +414,18 @@ def create_default_optimizer(args):
 def compute_optimizer_args(args):
 
     if args.optimizer and args.name:
+        print("TEST1")
         optimizer = create_optimizer(args)
     else:
+        print("TEST2")
         optimizer = create_default_optimizer(args)
+    print("OPTIMIZER NAME:", args.name, args.optimizer)
+    print("OPTIMIZER:", optimizer)
     args.optimizer = optimizer
     return args
 
 def get_args():
-
+    print("AAAAAAAAAAAAAAAAAAAAAAA")
     args = parse_args()
     args = compute_run_args(args)
     args = compute_data_args(args)
@@ -424,6 +433,7 @@ def get_args():
     args = compute_optimizer_args(args)
     args = compute_attack_args(args)
     args = compute_output_dir(args)
+    print("TEST10")
     print("arguments parsing finished")
     print(args)
     return args
