@@ -86,7 +86,7 @@ class PGD(Attack):
         ## update weights and biases
         #w = w - self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
 
-        grad = self.eta*(m_dw_corr/(np.sqrt(v_dw_corr)+self.epsilon))
+        grad = self.eta*(m_dw_corr/(torch.sqrt(v_dw_corr)+self.epsilon))
 
 
 
