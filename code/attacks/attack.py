@@ -31,8 +31,13 @@ class Attack:
             self.perturb_model = self.perturb_model_split
 
         self.pert_padding = pert_padding
-        self.momentum = 0.9
-        self.prev_v = 0
+        self.eps = 10e-8
+        self.t = 0
+        self.beta1 = 0.9
+        self.beta2 = 0.999
+        self.m = 0
+        self.u = 0
+        self.adam_alpha = 0.002
 
     def random_initialization(self, pert, eps):
         if self.norm == 'Linf':
@@ -440,9 +445,17 @@ class Attack:
         with torch.no_grad():
 
             grad = self.normalize_grad(grad_tot)
-            v = multiplier * a_abs * grad + self.momentum * self.prev_v
-            pert += v
-            self.prev_v = v
+            self.m = self.beta1 * self.m + (1 - self.beta1) * grad
+            if self.u == 0:
+                self.u = torch.zeros_like(grad)
+            self.u = torch.max(self.u * self.beta2, torch.abs(grad), self.eps)
+            step_size = self.adam_alpha / (1 - self.beta1 ** self.t)
+            delta = self.m / self.u
+            pert += step_size * delta
+            self.t += 1
+            # v = multiplier * a_abs * grad + self.momentum * self.prev_v
+            # pert += v
+            # self.prev_v = v
             pert = self.project(pert, eps)
 
         return pert
