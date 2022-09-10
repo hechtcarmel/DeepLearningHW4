@@ -33,12 +33,13 @@ class Attack:
         self.pert_padding = pert_padding
 
         #####
+        self.beta1 = 0.9
+        self.beta2 = 0.999
         self.m = 0
-        self.n = 0
-        self.mu = 0.975
-        self.nu = 0.999
+        self.v = 0
+        self.vhat = 0.975
+        self.theta = 0.999
         self.adam_alpha = 0.002
-
         self.eps = 10e-8
         #####
 
@@ -450,21 +451,11 @@ class Attack:
         # do gradient step
         with torch.no_grad():
             grad = self.normalize_grad(grad_tot)
-            self.m = self.mu * self.m + (1 - self.mu) * grad
-            self.n = self.nu * self.n + (1 - self.nu) * grad ** 2
-            mhat = self.mu * self.m / (1 - self.mu + self.eps) + \
-                   ((1 - self.mu) * grad) / (1 - self.mu + self.eps)
-            nhat = self.nu * self.n / (1 - self.nu)
-            pert += self.adam_alpha * self.mhat / (torch.sqrt(nhat) + eps)
+            self.m = self.beta1 * self.m + (1 - self.beta1) * grad
+            self.v = self.beta2 * self.v + (1 - self.beta2) * grad ** 2
+            self.vhat = torch.max(self.v, self.vhat)
+            pert += self.adam_alpha * self.m / (torch.sqrt(self.vhat) + self.eps)
 
-            # self.m = self.beta1 * self.m + (1 - self.beta1) * grad
-            # if self.u == 0:
-            #     self.u = torch.zeros_like(grad)
-            # self.u = torch.max(self.u * self.beta2, torch.abs(grad), self.eps)
-            # step_size = self.adam_alpha / (1 - self.beta1 ** self.t)
-            # delta = self.m / self.u
-            # pert += step_size * delta
-            # self.t += 1
             pert = self.project(pert, eps)
 
         return pert
