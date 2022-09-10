@@ -31,13 +31,16 @@ class Attack:
             self.perturb_model = self.perturb_model_split
 
         self.pert_padding = pert_padding
-        self.eps = 10e-8
-        self.t = 0
-        self.beta1 = 0.9
-        self.beta2 = 0.999
+
+        #####
         self.m = 0
-        self.u = 0
+        self.n = 0
+        self.mu = 0.975
+        self.nu = 0.999
         self.adam_alpha = 0.002
+
+        self.eps = 10e-8
+        #####
 
     def random_initialization(self, pert, eps):
         if self.norm == 'Linf':
@@ -53,7 +56,7 @@ class Attack:
 
     def project(self, pert, eps):
         if self.norm == 'Linf':
-            pert = torch.clamp(pert, 1-eps, eps)
+            pert = torch.clamp(pert, 1 - eps, eps)
         else:
             pert = F.normalize(pert.view(pert.shape[0], -1),
                                p=self.p, dim=-1).view(pert.shape) * eps
@@ -112,12 +115,13 @@ class Attack:
                 img1_I1, img2_I1, intrinsic_I1, \
                 img1_delta, img2_delta, \
                 motions_gt, scale, pose_quat_gt, patch_pose, mask, perspective = extract_traj_data(data)
-                img1_adv, img2_adv, output_adv, loss = self.test_pert_sample(pert_expand, img1_I0, img2_I0, intrinsic_I0,
-                                                           img1_delta, img2_delta,
-                                                           scale, mask, perspective,
-                                                           eval_y_list[data_idx],
-                                                           patch_pose,
-                                                           device=device)
+                img1_adv, img2_adv, output_adv, loss = self.test_pert_sample(pert_expand, img1_I0, img2_I0,
+                                                                             intrinsic_I0,
+                                                                             img1_delta, img2_delta,
+                                                                             scale, mask, perspective,
+                                                                             eval_y_list[data_idx],
+                                                                             patch_pose,
+                                                                             device=device)
                 loss_list.append(loss)
 
                 del img1_I0
@@ -143,19 +147,19 @@ class Attack:
         return loss_list
 
     def test_pert_sample(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
-                   scale, mask, perspective, y, target_pose, device=None):
+                         scale, mask, perspective, y, target_pose, device=None):
         mask1, mask2, perspective1, perspective2 = self.prep_data(mask, perspective)
         pert = pert.detach()
         img1_adv, img2_adv, output_adv_device = self.perturb_model(pert, img1_I0, img2_I0,
-                                                            intrinsic_I0,
-                                                            img1_delta,
-                                                            img2_delta,
-                                                            scale,
-                                                            mask1,
-                                                            mask2,
-                                                            perspective1,
-                                                            perspective2,
-                                                            device)
+                                                                   intrinsic_I0,
+                                                                   img1_delta,
+                                                                   img2_delta,
+                                                                   scale,
+                                                                   mask1,
+                                                                   mask2,
+                                                                   perspective1,
+                                                                   perspective2,
+                                                                   device)
         loss_device = self.test_criterion(output_adv_device, scale.to(device), y.to(device), target_pose.to(device))
         loss = loss_device.detach().cpu().tolist()
         output_adv = (output_adv_device[0].detach().cpu(), output_adv_device[1].detach().cpu())
@@ -248,19 +252,22 @@ class Attack:
     def calc_sample_grad(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
                          scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None):
         grad = self.calc_sample_grad_aux(pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
-                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device)
+                                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2,
+                                         device)
         return grad
 
     def calc_sample_grad_single(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
-                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None):
+                                scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2,
+                                device=None):
         raise NotImplementedError('calc_sample_grad_single method not defined!')
 
     def calc_sample_grad_split(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta,
-                         scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2, device=None):
+                               scale, y, clean_flow, target_pose, perspective1, perspective2, mask1, mask2,
+                               device=None):
         raise NotImplementedError('calc_sample_grad_split method not defined!')
 
     def perturb_model_single(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta, scale, mask1, mask2,
-                      perspective1, perspective2, device=None):
+                             perspective1, perspective2, device=None):
         pert_warp1, pert_warp2 = self.warp_pert(pert, perspective1, perspective2, device)
         if device is None:
             img1_adv = img1_I0.clone().detach()
@@ -280,7 +287,7 @@ class Attack:
         return img1_adv, img2_adv, output_adv
 
     def perturb_model_split(self, pert, img1_I0, img2_I0, intrinsic_I0, img1_delta, img2_delta, scale, mask1, mask2,
-                      perspective1, perspective2, device=None):
+                            perspective1, perspective2, device=None):
 
         sample_data_ind = list(range(img1_I0.shape[0] + 1))
         window_start_list = sample_data_ind[0::self.sample_window_size]
@@ -306,12 +313,11 @@ class Attack:
             mask1_window = mask1[window_start:window_end].clone().detach()
             mask2_window = mask2[window_start:window_end].clone().detach()
 
-            img1_adv_window_device, img2_adv_window_device, (motions_adv_window_device, flow_adv_window_device)\
+            img1_adv_window_device, img2_adv_window_device, (motions_adv_window_device, flow_adv_window_device) \
                 = self.perturb_model_single(pert_window, img1_I0_window, img2_I0_window, intrinsic_I0_window,
                                             img1_delta_window, img2_delta_window, scale_window,
                                             mask1_window, mask2_window, perspective1_window, perspective2_window,
                                             device=device)
-
 
             img1_adv_window_device_list.append(img1_adv_window_device)
             img2_adv_window_device_list.append(img2_adv_window_device)
@@ -443,23 +449,26 @@ class Attack:
 
         # do gradient step
         with torch.no_grad():
-
             grad = self.normalize_grad(grad_tot)
-            self.m = self.beta1 * self.m + (1 - self.beta1) * grad
-            if self.u == 0:
-                self.u = torch.zeros_like(grad)
-            self.u = torch.max(self.u * self.beta2, torch.abs(grad), self.eps)
-            step_size = self.adam_alpha / (1 - self.beta1 ** self.t)
-            delta = self.m / self.u
-            pert += step_size * delta
-            self.t += 1
-            # v = multiplier * a_abs * grad + self.momentum * self.prev_v
-            # pert += v
-            # self.prev_v = v
+            self.m = self.mu * self.m + (1 - self.mu) * grad
+            self.n = self.nu * self.n + (1 - self.nu) * grad ** 2
+            mhat = self.mu * self.m / (1 - self.mu + self.eps) + \
+                   ((1 - self.mu) * grad) / (1 - self.mu + self.eps)
+            nhat = self.nu * self.n / (1 - self.nu)
+            pert += self.adam_alpha * self.mhat / (torch.sqrt(nhat) + eps)
+
+            # self.m = self.beta1 * self.m + (1 - self.beta1) * grad
+            # if self.u == 0:
+            #     self.u = torch.zeros_like(grad)
+            # self.u = torch.max(self.u * self.beta2, torch.abs(grad), self.eps)
+            # step_size = self.adam_alpha / (1 - self.beta1 ** self.t)
+            # delta = self.m / self.u
+            # pert += step_size * delta
+            # self.t += 1
             pert = self.project(pert, eps)
 
         return pert
 
     def perturb(self, data_loader, y_list, eps,
-                                   targeted=False, device=None, eval_data_loader=None, eval_y_list=None):
+                targeted=False, device=None, eval_data_loader=None, eval_y_list=None):
         raise NotImplementedError('perturb method not defined!')
