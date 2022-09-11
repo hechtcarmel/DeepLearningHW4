@@ -454,8 +454,7 @@ class Attack:
             self.m = self.beta1 * self.m + (1 - self.beta1) * grad
             self.v = self.beta2 * self.v + (1 - self.beta2) * grad ** 2
             self.vhat = torch.max(self.v,
-                                  torch.FloatTensor([self.vhat]).expand_as(self.v),
-                                                    device=self.v.get_device())
+                                  torch.FloatTensor([self.vhat], device=self.v.get_device()).expand_as(self.v))
             pert += self.adam_alpha * self.m / (torch.sqrt(self.vhat) + self.eps)
 
             pert = self.project(pert, eps)
