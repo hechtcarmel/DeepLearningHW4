@@ -449,6 +449,7 @@ class Attack:
 
         # do gradient step
         with torch.no_grad():
+            self.adam_alpha = a_abs * multiplier
             grad = self.normalize_grad(grad_tot)
             self.m = self.mu * self.m + (1 - self.mu) * grad
             self.n = self.nu * self.n + (1 - self.nu) * grad ** 2
@@ -457,14 +458,6 @@ class Attack:
             nhat = self.nu * self.n / (1 - self.nu)
             pert += self.adam_alpha * mhat / (torch.sqrt(nhat) + eps)
 
-            # self.m = self.beta1 * self.m + (1 - self.beta1) * grad
-            # if self.u == 0:
-            #     self.u = torch.zeros_like(grad)
-            # self.u = torch.max(self.u * self.beta2, torch.abs(grad), self.eps)
-            # step_size = self.adam_alpha / (1 - self.beta1 ** self.t)
-            # delta = self.m / self.u
-            # pert += step_size * delta
-            # self.t += 1
             pert = self.project(pert, eps)
 
         return pert

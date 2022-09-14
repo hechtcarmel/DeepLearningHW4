@@ -173,10 +173,10 @@ class VOCriterion:
 
     def apply(self, model_output, scale, motions_gt, target_pose, flow_clean=None):
         motions, flow = model_output
-        if target_pose is not None and self.calc_target_t_product:
-            t_crit, target_t_crit = self.calc_t_crit(motions, motions_gt, target_pose)
-        else:
-            t_crit, target_t_crit = self.calc_t_crit(motions, motions_gt, None)
+        #if target_pose is not None and self.calc_target_t_product:
+        _, target_t_crit = self.calc_t_crit(motions, motions_gt, target_pose)
+        #else:
+        t_crit, _ = self.calc_t_crit(motions, motions_gt, None)
         rot_crit = torch.zeros(motions.shape[0] + 1,
                                device=motions.device, dtype=motions.dtype)
         flow_crit = torch.zeros(motions.shape[0] + 1,
