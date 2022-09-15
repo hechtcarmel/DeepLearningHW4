@@ -449,6 +449,7 @@ class Attack:
 
         # do gradient step
         with torch.no_grad():
+            self.adam_alpha = a_abs * multiplier
             grad = self.normalize_grad(grad_tot)
             self.m = self.mu * self.m + (1 - self.mu) * grad
             self.n = self.nu * self.n + (1 - self.nu) * grad ** 2
